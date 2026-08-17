@@ -15,6 +15,9 @@ from .valuation import ValuationRule
 
 
 ZERO = Decimal("0")
+REALIZED_PNL_FLOWS = frozenset(
+    {FlowType.EXTERNAL_REVENUE, FlowType.EXTERNAL_EXPENSE, FlowType.CREDIT_LOSS}
+)
 
 
 def hard_nav_effect(
@@ -65,6 +68,26 @@ def hard_nav_effect(
     return effect
 
 
+def entry_pnl_effect(ledger: ReportingLedger, entry: ReportingEntry) -> Decimal:
+    """Return signed external P&L represented by revenue/expense account lines.
+
+    Revenue normal credits increase P&L. Expense normal debits decrease P&L.
+    Intra-group or memo P&L accounts are ignored for consolidated external P&L.
+    Principal and asset/liability movements do not enter this function directly.
+    """
+
+    effect = ZERO
+    for line in entry.lines:
+        spec = ledger.account(line.account_id)
+        if spec.consolidation_class != ConsolidationClass.EXTERNAL:
+            continue
+        if spec.account_class == AccountClass.REVENUE:
+            effect += line.credit - line.debit
+        elif spec.account_class == AccountClass.EXPENSE:
+            effect += line.credit - line.debit
+    return effect
+
+
 def net_new_capital_since(
     ledger: ReportingLedger,
     sequence: int,
@@ -82,18 +105,29 @@ def net_new_capital_since(
 def realized_external_revenue_since(
     ledger: ReportingLedger,
     sequence: int,
-    valuation_policy: Mapping[str, ValuationRule],
 ) -> Decimal:
-    """Signed HardNAV effect of externally evidenced revenue-class entries.
+    """Reporting-currency revenue from externally evidenced revenue entries.
 
-    `ReportingLedger.post` already requires evidence for every non-internal
-    flow. This function additionally avoids counting gross settlement notional,
-    principal movements or asset swaps because it selects only
-    `EXTERNAL_REVENUE` entries and measures their net HardNAV effect.
+    The value is taken from explicit consolidated revenue-account lines rather
+    than gross asset movement. Principal repayment and settlement notional are
+    excluded by flow type.
     """
 
     total = ZERO
     for entry in ledger.entries_since(sequence):
         if entry.flow_type == FlowType.EXTERNAL_REVENUE:
-            total += hard_nav_effect(ledger, entry, valuation_policy)
+            total += entry_pnl_effect(ledger, entry)
+    return total
+
+
+def realized_external_pnl_since(
+    ledger: ReportingLedger,
+    sequence: int,
+) -> Decimal:
+    """Signed realized P&L from revenue, expense and credit-loss flow classes."""
+
+    total = ZERO
+    for entry in ledger.entries_since(sequence):
+        if entry.flow_type in REALIZED_PNL_FLOWS:
+            total += entry_pnl_effect(ledger, entry)
     return total
