@@ -1,0 +1,106 @@
+{
+  "schema": "sinergy.schema-registry/v1",
+  "as_of": "2026-08-17",
+  "policy": "A schema version is immutable once promoted to CANONICAL. Draft versions may evolve only before promotion; superseded versions remain registered for provenance.",
+  "schemas": [
+    {
+      "schema_id": "financial.snapshot/v1",
+      "status": "SUPERSEDED_DRAFT",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/financial_snapshot_v1.schema.json",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergychain", "Shtenco/synergy_ai_blockchain"],
+      "superseded_by": "financial.snapshot/v2"
+    },
+    {
+      "schema_id": "financial.snapshot/v2",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/financial_snapshot_v2.schema.json",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergychain", "Shtenco/synergy_ai_blockchain", "Shtenco/agi_olga"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "maturity.snapshot/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/maturity_snapshot_v1.schema.json",
+      "producer": "Shtenco/synergy_matrix_sota",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/agi_olga"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "settlement.receipt/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/settlement_receipt_v1.schema.json",
+      "producer": "Shtenco/synergy_pay_system",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/synergy_ai_blockchain", "Shtenco/synergychain"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "ledger.event/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/ledger_event_v1.schema.json",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergy_ai_blockchain"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "chart-of-accounts/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/chart_of_accounts_v1.schema.json",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergy_financial_os"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "valuation-policy/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/valuation_policy_v1.schema.json",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/agi_olga"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "household.tranche/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/synergy_matrix_sota",
+      "path": "schemas/household_tranche_v1.schema.json",
+      "producer": "Shtenco/synergy_matrix_sota",
+      "consumers": ["Shtenco/synergy_matrix_sota"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "project.proposal/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/synergy_eurasian",
+      "path": "schemas/project_proposal_v1.schema.json",
+      "producer": "Shtenco/synergy_eurasian",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/agi_olga"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "ai.policy-proposal/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/agi_olga",
+      "path": "integration/policy_proposal_v1.schema.json",
+      "producer": "Shtenco/agi_olga",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/synergychain"],
+      "superseded_by": null
+    },
+    {
+      "schema_id": "commitment.envelope/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/synergy_ai_blockchain",
+      "path": "schemas/commitment_envelope_v1.schema.json",
+      "producer": "Shtenco/synergy_ai_blockchain",
+      "consumers": ["Shtenco/synergy_ai_blockchain", "Shtenco/synergychain"],
+      "superseded_by": null
+    }
+  ]
+}
