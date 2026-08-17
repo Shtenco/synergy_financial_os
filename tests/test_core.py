@@ -9,7 +9,10 @@ from sinergy_financial_os import (
     debt_capacity_gap,
     distributable_profit,
     ensure_balanced_journal,
+    ensure_lcr_floor,
     ensure_maturity_match,
+    liquidity_coverage_ratio,
+    liquidity_surplus,
 )
 
 
@@ -69,3 +72,24 @@ def test_debt_capacity_gap_sign_is_unambiguous() -> None:
 def test_coverage_deficit_is_only_positive_when_outstanding_exceeds_capacity() -> None:
     assert coverage_deficit("100", "70") == Decimal("0")
     assert coverage_deficit("100", "120") == Decimal("20")
+
+
+def test_liquidity_coverage_ratio_uses_explicit_horizon_outflows() -> None:
+    assert liquidity_coverage_ratio("150", "100") == Decimal("1.5")
+    assert liquidity_surplus("150", "100") == Decimal("50")
+
+
+def test_zero_outflow_lcr_is_undefined_not_fake_infinity() -> None:
+    assert liquidity_coverage_ratio("150", "0") is None
+    ensure_lcr_floor("0", "0", "1")
+
+
+def test_lcr_floor_fails_closed_when_nonzero_outflows_are_undercovered() -> None:
+    ensure_lcr_floor("120", "100", "1.1")
+    with pytest.raises(AccountingInvariantError):
+        ensure_lcr_floor("100", "100", "1.1")
+
+
+def test_lcr_inputs_cannot_be_negative() -> None:
+    with pytest.raises(AccountingInvariantError):
+        liquidity_coverage_ratio("-1", "10")
