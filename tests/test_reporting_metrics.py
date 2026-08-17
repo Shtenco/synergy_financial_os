@@ -8,8 +8,10 @@ from sinergy_financial_os import (
     ReportingLedger,
     ReportingLine,
     ValuationRule,
+    entry_pnl_effect,
     hard_nav_effect,
     net_new_capital_since,
+    realized_external_pnl_since,
     realized_external_revenue_since,
 )
 
@@ -62,6 +64,13 @@ def _ledger() -> ReportingLedger:
             ConsolidationClass.EXTERNAL,
             "REVENUE_ACCOUNT",
         ),
+        ReportingAccountSpec(
+            "expense:external",
+            "External expense/loss",
+            AccountClass.EXPENSE,
+            ConsolidationClass.EXTERNAL,
+            "EXPENSE_ACCOUNT",
+        ),
     ):
         ledger.register_account(spec)
     return ledger
@@ -78,7 +87,7 @@ def _policy() -> dict[str, ValuationRule]:
     }
 
 
-def test_capital_injection_has_positive_hard_nav_effect_and_is_net_new_capital() -> None:
+def test_capital_injection_has_positive_hard_nav_effect_but_zero_pnl() -> None:
     ledger = _ledger()
     entry = ledger.post(
         event_id="capital-1",
@@ -91,11 +100,13 @@ def test_capital_injection_has_positive_hard_nav_effect_and_is_net_new_capital()
         ),
     )
     assert hard_nav_effect(ledger, entry, _policy()) == Decimal("100")
+    assert entry_pnl_effect(ledger, entry) == Decimal("0")
     assert net_new_capital_since(ledger, 0, _policy()) == Decimal("100")
-    assert realized_external_revenue_since(ledger, 0, _policy()) == Decimal("0")
+    assert realized_external_revenue_since(ledger, 0) == Decimal("0")
+    assert realized_external_pnl_since(ledger, 0) == Decimal("0")
 
 
-def test_liability_issuance_has_zero_hard_nav_effect() -> None:
+def test_liability_issuance_has_zero_hard_nav_effect_and_zero_pnl() -> None:
     ledger = _ledger()
     entry = ledger.post(
         event_id="liability-1",
@@ -108,9 +119,10 @@ def test_liability_issuance_has_zero_hard_nav_effect() -> None:
         ),
     )
     assert hard_nav_effect(ledger, entry, _policy()) == Decimal("0")
+    assert entry_pnl_effect(ledger, entry) == Decimal("0")
 
 
-def test_asset_sale_counts_only_net_hard_nav_gain_not_gross_cash_debit() -> None:
+def test_asset_sale_counts_only_actual_reporting_profit() -> None:
     ledger = _ledger()
     ledger.post(
         event_id="seed-market",
@@ -135,10 +147,12 @@ def test_asset_sale_counts_only_net_hard_nav_gain_not_gross_cash_debit() -> None
     )
 
     assert hard_nav_effect(ledger, revenue_entry, _policy()) == Decimal("10")
-    assert realized_external_revenue_since(ledger, 1, _policy()) == Decimal("10")
+    assert entry_pnl_effect(ledger, revenue_entry) == Decimal("10")
+    assert realized_external_revenue_since(ledger, 1) == Decimal("10")
+    assert realized_external_pnl_since(ledger, 1) == Decimal("10")
 
 
-def test_credit_principal_repayment_is_not_revenue() -> None:
+def test_credit_principal_repayment_hardens_nav_but_is_not_profit() -> None:
     ledger = _ledger()
     ledger.post(
         event_id="seed-cash",
@@ -172,10 +186,78 @@ def test_credit_principal_repayment_is_not_revenue() -> None:
     )
 
     assert hard_nav_effect(ledger, repayment, _policy()) == Decimal("40")
-    assert realized_external_revenue_since(ledger, 0, _policy()) == Decimal("0")
+    assert entry_pnl_effect(ledger, repayment) == Decimal("0")
+    assert realized_external_revenue_since(ledger, 0) == Decimal("0")
+    assert realized_external_pnl_since(ledger, 0) == Decimal("0")
 
 
-def test_revenue_paid_by_extinguishing_external_liability_can_raise_hard_nav() -> None:
+def test_credit_loss_reduces_pnl_even_when_hard_nav_effect_is_zero() -> None:
+    ledger = _ledger()
+    ledger.post(
+        event_id="seed-cash",
+        reference="seed-cash-ref",
+        flow_type=FlowType.EXTERNAL_CAPITAL,
+        evidence_digest=EVIDENCE,
+        lines=(
+            ReportingLine("asset:cash", debit="100"),
+            ReportingLine("equity:capital", credit="100"),
+        ),
+    )
+    ledger.post(
+        event_id="loan-1",
+        reference="loan-origination-ref",
+        flow_type=FlowType.CREDIT_ORIGINATION,
+        evidence_digest="ef" * 32,
+        lines=(
+            ReportingLine("asset:credit", debit="40"),
+            ReportingLine("asset:cash", credit="40"),
+        ),
+    )
+    loss = ledger.post(
+        event_id="loss-1",
+        reference="credit-loss-ref",
+        flow_type=FlowType.CREDIT_LOSS,
+        evidence_digest="56" * 32,
+        lines=(
+            ReportingLine("expense:external", debit="40"),
+            ReportingLine("asset:credit", credit="40"),
+        ),
+    )
+
+    assert hard_nav_effect(ledger, loss, _policy()) == Decimal("0")
+    assert entry_pnl_effect(ledger, loss) == Decimal("-40")
+    assert realized_external_pnl_since(ledger, 2) == Decimal("-40")
+
+
+def test_external_cash_expense_reduces_hard_nav_and_pnl_once() -> None:
+    ledger = _ledger()
+    ledger.post(
+        event_id="seed-cash",
+        reference="seed-cash-ref",
+        flow_type=FlowType.EXTERNAL_CAPITAL,
+        evidence_digest=EVIDENCE,
+        lines=(
+            ReportingLine("asset:cash", debit="100"),
+            ReportingLine("equity:capital", credit="100"),
+        ),
+    )
+    expense = ledger.post(
+        event_id="expense-1",
+        reference="expense-bank-ref",
+        flow_type=FlowType.EXTERNAL_EXPENSE,
+        evidence_digest="78" * 32,
+        lines=(
+            ReportingLine("expense:external", debit="5"),
+            ReportingLine("asset:cash", credit="5"),
+        ),
+    )
+
+    assert hard_nav_effect(ledger, expense, _policy()) == Decimal("-5")
+    assert entry_pnl_effect(ledger, expense) == Decimal("-5")
+    assert realized_external_pnl_since(ledger, 1) == Decimal("-5")
+
+
+def test_revenue_paid_by_extinguishing_external_liability_is_profit() -> None:
     ledger = _ledger()
     ledger.post(
         event_id="issue-synt",
@@ -199,4 +281,6 @@ def test_revenue_paid_by_extinguishing_external_liability_can_raise_hard_nav() -
     )
 
     assert hard_nav_effect(ledger, revenue, _policy()) == Decimal("5")
-    assert realized_external_revenue_since(ledger, 1, _policy()) == Decimal("5")
+    assert entry_pnl_effect(ledger, revenue) == Decimal("5")
+    assert realized_external_revenue_since(ledger, 1) == Decimal("5")
+    assert realized_external_pnl_since(ledger, 1) == Decimal("5")
