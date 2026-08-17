@@ -8,7 +8,7 @@
     "schema",
     "settlement_id",
     "intent_id",
-    "provider_id",
+    "providers",
     "source_asset",
     "source_amount",
     "target_asset",
@@ -16,14 +16,19 @@
     "fees",
     "status",
     "finality_time",
-    "external_evidence_class",
+    "external_evidence_classes",
+    "external_references",
     "reconciled"
   ],
   "properties": {
     "schema": {"const": "settlement.receipt/v1"},
     "settlement_id": {"type": "string", "minLength": 1},
     "intent_id": {"type": "string", "minLength": 1},
-    "provider_id": {"type": "string", "minLength": 1},
+    "providers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
     "source_asset": {"type": "string", "minLength": 1, "maxLength": 32},
     "source_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
     "target_asset": {"type": "string", "minLength": 1, "maxLength": 32},
@@ -44,10 +49,18 @@
     },
     "status": {"enum": ["PENDING", "SETTLED", "FAILED", "REVERSED"]},
     "finality_time": {"type": ["string", "null"], "format": "date-time"},
-    "external_evidence_class": {
-      "enum": ["BANK", "PSP", "CEX_FILL", "DEX_RECEIPT", "BLOCKCHAIN_FINALITY", "CBDC", "MERCHANT", "OTHER"]
+    "external_evidence_classes": {
+      "type": "array",
+      "items": {
+        "enum": ["BANK", "PSP", "CEX_FILL", "DEX_RECEIPT", "BLOCKCHAIN_FINALITY", "CBDC", "MERCHANT", "OTHER"]
+      },
+      "uniqueItems": true
     },
-    "external_reference": {"type": ["string", "null"]},
+    "external_references": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
     "evidence_digest": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"},
     "reconciled": {"type": "boolean"},
     "route_id": {"type": ["string", "null"]},
