@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+from .canonical_json import canonical_json_digest
 from .errors import AccountingInvariantError
 
 
@@ -30,3 +31,16 @@ def requirement_ids_from_registry(registry: Mapping[str, Any]) -> frozenset[str]
     if not ids:
         raise AccountingInvariantError("requirement registry must not be empty")
     return frozenset(ids)
+
+
+def requirement_registry_digest(registry: Mapping[str, Any]) -> str:
+    """Return canonical SHA-256 of the validated full monetary constitution.
+
+    The digest binds not only REQ-* identifiers but their statements, ownership,
+    implementation/test references and verification metadata. Therefore changing
+    the meaning of an existing requirement under the same identifier changes the
+    digest and makes an older AI proposal stale.
+    """
+
+    requirement_ids_from_registry(registry)
+    return canonical_json_digest(dict(registry))
