@@ -15,7 +15,7 @@ from .core import (
     liquidity_coverage_ratio,
     liquidity_surplus,
 )
-from .governance import requirement_ids_from_registry
+from .governance import requirement_ids_from_registry, requirement_registry_digest
 from .ledger import AppendOnlyJournal, JournalEntry, JournalLine
 from .maturity_bridge import (
     MaturityTranslation,
@@ -113,6 +113,7 @@ __all__ = [
     "realized_external_pnl_since",
     "realized_external_revenue_since",
     "requirement_ids_from_registry",
+    "requirement_registry_digest",
     "review_ai_policy_proposal",
     "screen_project_for_financial_review",
     "screen_project_v2_for_financial_review",
