@@ -32,7 +32,7 @@
     "source_asset": {"type": "string", "minLength": 1, "maxLength": 32},
     "source_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
     "target_asset": {"type": "string", "minLength": 1, "maxLength": 32},
-    "target_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "target_amount": {"type": ["string", "null"], "pattern": "^[0-9]+(\\.[0-9]+)?$"},
     "fees": {
       "type": "array",
       "items": {
