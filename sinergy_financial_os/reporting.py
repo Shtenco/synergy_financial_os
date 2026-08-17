@@ -44,12 +44,7 @@ class FlowType(str, Enum):
 
 
 EVIDENCE_REQUIRED_FLOWS = frozenset(
-    {
-        FlowType.EXTERNAL_CAPITAL,
-        FlowType.EXTERNAL_REVENUE,
-        FlowType.EXTERNAL_EXPENSE,
-        FlowType.SETTLEMENT,
-    }
+    flow_type for flow_type in FlowType if flow_type != FlowType.INTERNAL
 )
 
 
