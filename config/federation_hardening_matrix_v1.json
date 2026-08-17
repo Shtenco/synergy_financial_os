@@ -76,6 +76,17 @@
       ],
       "implementation_status": "ADDRESSED",
       "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-TRUST-001",
+      "canonical_requirement_refs": ["REQ-CHAIN-001"],
+      "repository": "Shtenco/synergy_ai_blockchain",
+      "branch": "feat/trust-state-proof-layer-20260817",
+      "statement": "Trust commitments must bind project.proposal/v2 to its own PROJECT_PROPOSAL logical domain; superseded project.proposal/v1 is preserved for provenance but rejected for new canonical commitments, and project proposal bytes cannot be reinterpreted as project.screening/v1.",
+      "implementation": ["sinergy_ai_blockchain/schema_policy.py"],
+      "tests": ["tests/test_schema_policy.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
     }
   ]
 }
