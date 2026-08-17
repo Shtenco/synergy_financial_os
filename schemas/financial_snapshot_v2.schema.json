@@ -5,9 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "$defs": {
-    "nonnegative": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "signed": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$"},
-    "ratio": {"type": ["string", "null"], "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "nonnegative": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*|0\\.[0-9]*[1-9]|[1-9][0-9]*\\.[0-9]*[1-9])$"
+    },
+    "signed": {
+      "type": "string",
+      "pattern": "^(0|-?[1-9][0-9]*|-?0\\.[0-9]*[1-9]|-?[1-9][0-9]*\\.[0-9]*[1-9])$"
+    },
+    "ratio": {
+      "oneOf": [
+        {"$ref": "#/$defs/nonnegative"},
+        {"type": "null"}
+      ]
+    },
     "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
   },
   "required": [
@@ -48,7 +59,7 @@
   ],
   "properties": {
     "schema": {"const": "financial.snapshot/v2"},
-    "sequence": {"type": "integer", "minimum": 0},
+    "sequence": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
     "as_of": {"type": "string", "format": "date-time"},
     "accounting_perimeter": {"type": "string", "minLength": 1},
     "reporting_currency": {"type": "string", "minLength": 1, "maxLength": 16},
@@ -58,7 +69,7 @@
     "valuation_policy_id": {"type": "string", "minLength": 1},
     "valuation_policy_digest": {"$ref": "#/$defs/hex64"},
     "valuation_policy_as_of": {"type": "string", "format": "date-time"},
-    "period_start_sequence": {"type": "integer", "minimum": 0},
+    "period_start_sequence": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
     "previous_snapshot_digest": {
       "oneOf": [
         {"$ref": "#/$defs/hex64"},
