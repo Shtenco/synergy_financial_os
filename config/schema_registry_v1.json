@@ -67,6 +67,15 @@
       "superseded_by": null
     },
     {
+      "schema_id": "project.screening/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "path": "schemas/project_screening_v1.schema.json",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/agi_olga", "Shtenco/synergychain", "Shtenco/synergy_ai_blockchain"],
+      "superseded_by": null
+    },
+    {
       "schema_id": "household.tranche/v1",
       "status": "DRAFT_DOMAIN_SCHEMA",
       "schema_authority": "Shtenco/synergy_matrix_sota",
@@ -77,20 +86,38 @@
     },
     {
       "schema_id": "project.proposal/v1",
-      "status": "DRAFT_DOMAIN_SCHEMA",
+      "status": "SUPERSEDED_DRAFT",
       "schema_authority": "Shtenco/synergy_eurasian",
       "path": "schemas/project_proposal_v1.schema.json",
       "producer": "Shtenco/synergy_eurasian",
       "consumers": ["Shtenco/synergy_financial_os", "Shtenco/agi_olga"],
+      "superseded_by": "project.proposal/v2"
+    },
+    {
+      "schema_id": "project.proposal/v2",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/synergy_eurasian",
+      "path": "schemas/project_proposal_v2.schema.json",
+      "producer": "Shtenco/synergy_eurasian",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/agi_olga", "Shtenco/synergy_ai_blockchain"],
       "superseded_by": null
     },
     {
       "schema_id": "ai.policy-proposal/v1",
-      "status": "DRAFT_DOMAIN_SCHEMA",
+      "status": "SUPERSEDED_DRAFT",
       "schema_authority": "Shtenco/agi_olga",
       "path": "integration/policy_proposal_v1.schema.json",
       "producer": "Shtenco/agi_olga",
       "consumers": ["Shtenco/synergy_financial_os", "Shtenco/synergychain"],
+      "superseded_by": "ai.policy-proposal/v2"
+    },
+    {
+      "schema_id": "ai.policy-proposal/v2",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/agi_olga",
+      "path": "integration/policy_proposal_v2.schema.json",
+      "producer": "Shtenco/agi_olga",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/synergychain", "Shtenco/synergy_ai_blockchain"],
       "superseded_by": null
     },
     {
