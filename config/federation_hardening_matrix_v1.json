@@ -24,6 +24,24 @@
       "verification_status": "PENDING_RUNNER"
     },
     {
+      "control_id": "HARDEN-FIN-VALUATION-001",
+      "canonical_requirement_refs": ["REQ-FIN-004"],
+      "repository": "Shtenco/synergy_financial_os",
+      "branch": "test-bootstrap",
+      "statement": "ValuationPolicy must exist as a digest-bound, timezone-aware, rule-order-independent primitive; valuation factors must be finite and price-source classes closed before a FinancialSnapshot can bind their digest.",
+      "implementation": [
+        "sinergy_financial_os/valuation.py",
+        "schemas/valuation_policy_v1.schema.json"
+      ],
+      "tests": [
+        "tests/test_valuation.py",
+        "tests/test_valuation_policy.py",
+        "tests/test_public_api.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
       "control_id": "HARDEN-MAT-001",
       "canonical_requirement_refs": ["REQ-MAT-003", "REQ-MAT-004", "REQ-FIN-009"],
       "repository": "Shtenco/synergy_matrix_sota",
@@ -74,6 +92,40 @@
         "tests/test_project_v2.py",
         "tests/test_project_v2_conformance_fixture.py"
       ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-AI-001",
+      "canonical_requirement_refs": ["REQ-AI-001"],
+      "repository": "Shtenco/synergy_financial_os",
+      "branch": "test-bootstrap",
+      "statement": "AI policy review must bind each proposal to the exact FinancialSnapshot, ledger sequence, valuation-policy digest, full requirement-registry digest and TTL; hard_invariant_refs must resolve to real current REQ IDs, evidence references must be unique digests, and the strongest positive state remains REVIEWABLE.",
+      "implementation": [
+        "sinergy_financial_os/governance.py",
+        "sinergy_financial_os/ai_boundary.py",
+        "sinergy_financial_os/__init__.py"
+      ],
+      "tests": [
+        "tests/test_governance.py",
+        "tests/test_ai_boundary.py",
+        "tests/test_public_api.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-AI-SCHEMA-001",
+      "canonical_requirement_refs": ["REQ-AI-001"],
+      "repository": "Shtenco/agi_olga",
+      "branch": "docs/sinergy-financial-os-ai-boundary-20260817",
+      "statement": "ai.policy-proposal/v1 remains preserved for provenance while v2 requires an exact requirement-registry digest, safe ledger sequence, canonical decimal actions and authorization=NONE before Financial OS review.",
+      "implementation": [
+        "integration/policy_proposal_v2.schema.json",
+        "integration/check_policy_proposal_v2_schema.py",
+        ".github/workflows/financial-os-ai-boundary.yml"
+      ],
+      "tests": ["integration/check_policy_proposal_v2_schema.py"],
       "implementation_status": "ADDRESSED",
       "verification_status": "PENDING_RUNNER"
     },
