@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/financial.snapshot/v2",
+  "title": "SINERGY FinancialSnapshot v2",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "nonnegative": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "signed": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$"},
+    "ratio": {"type": ["string", "null"], "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
+  },
+  "required": [
+    "schema",
+    "sequence",
+    "as_of",
+    "accounting_perimeter",
+    "reporting_currency",
+    "ledger_digest",
+    "ledger_last_entry_digest",
+    "account_registry_digest",
+    "valuation_policy_id",
+    "valuation_policy_digest",
+    "valuation_policy_as_of",
+    "period_start_sequence",
+    "previous_snapshot_digest",
+    "hard_external_assets",
+    "external_liabilities",
+    "immediate_external_liabilities",
+    "hard_nav",
+    "liquid_nav",
+    "economic_nav",
+    "hard_coverage",
+    "net_new_capital",
+    "realized_external_revenue",
+    "realized_external_pnl",
+    "hard_nav_surplus_after_capital",
+    "required_retention",
+    "loss_carryforward",
+    "period_profit_budget",
+    "required_hard_nav_buffer",
+    "distribution_capacity",
+    "liquidity_horizons",
+    "maturity_snapshot_refs",
+    "policy_mode",
+    "invariant_failures",
+    "digest"
+  ],
+  "properties": {
+    "schema": {"const": "financial.snapshot/v2"},
+    "sequence": {"type": "integer", "minimum": 0},
+    "as_of": {"type": "string", "format": "date-time"},
+    "accounting_perimeter": {"type": "string", "minLength": 1},
+    "reporting_currency": {"type": "string", "minLength": 1, "maxLength": 16},
+    "ledger_digest": {"$ref": "#/$defs/hex64"},
+    "ledger_last_entry_digest": {"$ref": "#/$defs/hex64"},
+    "account_registry_digest": {"$ref": "#/$defs/hex64"},
+    "valuation_policy_id": {"type": "string", "minLength": 1},
+    "valuation_policy_digest": {"$ref": "#/$defs/hex64"},
+    "valuation_policy_as_of": {"type": "string", "format": "date-time"},
+    "period_start_sequence": {"type": "integer", "minimum": 0},
+    "previous_snapshot_digest": {
+      "oneOf": [
+        {"$ref": "#/$defs/hex64"},
+        {"type": "null"}
+      ]
+    },
+    "hard_external_assets": {"$ref": "#/$defs/nonnegative"},
+    "external_liabilities": {"$ref": "#/$defs/nonnegative"},
+    "immediate_external_liabilities": {"$ref": "#/$defs/nonnegative"},
+    "hard_nav": {"$ref": "#/$defs/signed"},
+    "liquid_nav": {"$ref": "#/$defs/signed"},
+    "economic_nav": {"$ref": "#/$defs/signed"},
+    "hard_coverage": {"$ref": "#/$defs/ratio"},
+    "net_new_capital": {"$ref": "#/$defs/signed"},
+    "realized_external_revenue": {"$ref": "#/$defs/nonnegative"},
+    "realized_external_pnl": {"$ref": "#/$defs/signed"},
+    "hard_nav_surplus_after_capital": {"$ref": "#/$defs/signed"},
+    "required_retention": {"$ref": "#/$defs/nonnegative"},
+    "loss_carryforward": {"$ref": "#/$defs/nonnegative"},
+    "period_profit_budget": {"$ref": "#/$defs/nonnegative"},
+    "required_hard_nav_buffer": {"$ref": "#/$defs/nonnegative"},
+    "distribution_capacity": {"$ref": "#/$defs/nonnegative"},
+    "liquidity_horizons": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "horizon_weeks",
+          "liquid_resources",
+          "expected_net_outflows",
+          "lcr",
+          "liquidity_surplus"
+        ],
+        "properties": {
+          "horizon_weeks": {"enum": [1, 4, 8]},
+          "liquid_resources": {"$ref": "#/$defs/nonnegative"},
+          "expected_net_outflows": {"$ref": "#/$defs/nonnegative"},
+          "lcr": {"$ref": "#/$defs/ratio"},
+          "liquidity_surplus": {"$ref": "#/$defs/signed"}
+        }
+      }
+    },
+    "maturity_snapshot_refs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/hex64"},
+      "uniqueItems": true
+    },
+    "policy_mode": {"enum": ["GROWTH", "NORMAL", "DEFENSE", "EMERGENCY"]},
+    "invariant_failures": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "digest": {"$ref": "#/$defs/hex64"}
+  }
+}
