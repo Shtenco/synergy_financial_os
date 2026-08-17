@@ -1,0 +1,210 @@
+{
+  "schema": "sinergy.requirement-registry/v1",
+  "as_of": "2026-08-17",
+  "default_verification_status": "PENDING_RUNNER",
+  "requirements": [
+    {
+      "id": "REQ-FIN-001",
+      "statement": "Every canonical reporting entry must conserve debits and credits exactly in one reporting currency.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/reporting.py"],
+      "tests": ["tests/test_reporting.py", "tests/test_reporting_semantics.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-002",
+      "statement": "Own-issued instruments must contribute zero consolidated Hard/Liquid/Economic valuation in the canonical reference policy.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/valuation.py"],
+      "tests": ["tests/test_valuation.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-003",
+      "statement": "Intra-group claims must not create consolidated external NAV.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/reporting.py", "docs/VALUATION_AND_CONSOLIDATION.md"],
+      "tests": ["tests/test_reporting.py", "tests/test_valuation.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-004",
+      "statement": "Credit-principal repayment and asset hardening must not be classified as distributable profit.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/core.py", "sinergy_financial_os/reporting_metrics.py", "sinergy_financial_os/snapshot.py"],
+      "tests": ["tests/test_reporting_metrics.py", "tests/test_snapshot_v2.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-005",
+      "statement": "External capital injections must be separated from realized P&L and distributions.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/reporting_metrics.py", "sinergy_financial_os/core.py"],
+      "tests": ["tests/test_reporting_metrics.py", "tests/test_core.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-006",
+      "statement": "Financial snapshots must bind a specific valuation policy by deterministic digest.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/valuation.py", "sinergy_financial_os/snapshot.py"],
+      "tests": ["tests/test_valuation_policy.py", "tests/test_snapshot_v2.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-007",
+      "statement": "Every non-internal canonical reporting flow must bind an external evidence digest.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/reporting.py"],
+      "tests": ["tests/test_reporting.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-008",
+      "statement": "Principal/notional flows must not hide P&L lines; principal and interest must be split into separately classified entries even if they share evidence.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/reporting.py"],
+      "tests": ["tests/test_reporting_semantics.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-FIN-009",
+      "statement": "LCR must be computed only after Financial OS combines liquid resources with explicit horizon outflows; zero outflow must remain undefined/null rather than fake infinity.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["sinergy_financial_os/core.py", "sinergy_financial_os/snapshot.py"],
+      "tests": ["tests/test_core.py", "tests/test_snapshot_v2.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-MAT-001",
+      "statement": "Loan maturity must be strictly shorter than eligible funding remaining maturity.",
+      "owner": "Shtenco/synergy_matrix_sota",
+      "implementation": ["sinergy_matrix_sota/core.py"],
+      "tests": ["tests/test_core.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-MAT-002",
+      "statement": "Borrower-owned current tranches must be excluded from independent term funding by default.",
+      "owner": "Shtenco/synergy_matrix_sota",
+      "implementation": ["sinergy_matrix_sota/core.py"],
+      "tests": ["tests/test_core.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-MAT-003",
+      "statement": "Maturity-book monetary totals must never nominally add unlike currencies without an explicit conversion layer.",
+      "owner": "Shtenco/synergy_matrix_sota",
+      "implementation": ["sinergy_matrix_sota/core.py", "sinergy_matrix_sota/snapshot.py"],
+      "tests": ["tests/test_core.py", "tests/test_snapshot.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-MAT-004",
+      "statement": "Callable/restricted savings must not be presented as long-duration credit funding by default.",
+      "owner": "Shtenco/synergy_matrix_sota",
+      "implementation": ["sinergy_matrix_sota/core.py"],
+      "tests": ["tests/test_core.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-PAY-001",
+      "statement": "Quoted fees or nominal route savings must not be exported as realized settlement fees without observed settlement/reconciliation evidence.",
+      "owner": "Shtenco/synergy_pay_system",
+      "implementation": ["src/synergy_pay/financial_os_adapter.py"],
+      "tests": ["tests/test_financial_os_adapter.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-PAY-002",
+      "statement": "A cross-asset SETTLED receipt must contain a final route/output amount; unresolved output must not be represented as a fake zero.",
+      "owner": "Shtenco/synergy_pay_system",
+      "implementation": ["src/synergy_pay/financial_os_adapter.py"],
+      "tests": ["tests/test_financial_os_adapter.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-PAY-003",
+      "statement": "A non-terminal payment state must not be marked reconciled in the canonical settlement handoff.",
+      "owner": "Shtenco/synergy_pay_system",
+      "implementation": ["src/synergy_pay/financial_os_adapter.py"],
+      "tests": ["tests/test_financial_os_adapter.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-EUR-001",
+      "statement": "Project CAPEX, funding, private capital and cash flows must remain grouped by asset until an explicit FX/valuation layer translates them.",
+      "owner": "Shtenco/synergy_eurasian",
+      "implementation": ["sinergy_eurasian/project.py"],
+      "tests": ["tests/test_project.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-EUR-002",
+      "statement": "Input-output baseline output that exceeds physical capacity must be reported as a violation, not silently clipped or fabricated.",
+      "owner": "Shtenco/synergy_eurasian",
+      "implementation": ["sinergy_eurasian/input_output.py"],
+      "tests": ["tests/test_input_output.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-AI-001",
+      "statement": "Raw OLGA/NEXUS output must never mutate the canonical ledger directly; AI emits bounded proposals only.",
+      "owner": "Shtenco/agi_olga",
+      "implementation": [
+        "integration/SINERGY_FINANCIAL_OS_AI_BOUNDARY_20260817.md",
+        "integration/policy_proposal_v1.schema.json",
+        "integration/policy_proposal_v2.schema.json",
+        "integration/check_policy_proposal_v2_schema.py"
+      ],
+      "tests": ["integration/check_policy_proposal_v2_schema.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-CHAIN-001",
+      "statement": "Commitment digests must be separated by logical domain, network domain and verifier context.",
+      "owner": "Shtenco/synergy_ai_blockchain",
+      "implementation": ["sinergy_ai_blockchain/commitment.py"],
+      "tests": ["tests/test_commitment.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "id": "REQ-MEM-001",
+      "statement": "Audit-critical historical archives must preserve exact lossless round-trip provenance and must not be replaced by semantic summaries.",
+      "owner": "Shtenco/ai_compress",
+      "implementation": ["docs/SINERGY_MEMORY_ARCHIVE_BOUNDARY_20260817.md"],
+      "tests": [],
+      "implementation_status": "DOCUMENTED",
+      "verification_status": "EXISTING_CODEC_TESTS_SEPARATE"
+    },
+    {
+      "id": "REQ-LEGACY-001",
+      "statement": "Historical repositories, negative controls and superseded mechanisms must not be destructively rewritten during canonical federation migration.",
+      "owner": "Shtenco/synergy_financial_os",
+      "implementation": ["docs/LEGACY_POLICY.md", "config/source_baseline_20260817.json"],
+      "tests": ["tests/test_repository_contracts.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "sinergy.canonical-json-conformance/v1",
+  "profile": "sinergy.canonical-json/v1",
+  "vector_id": "unicode-safe-integer-decimal-string-001",
+  "payload": {
+    "z": "Привет",
+    "a": [
+      3,
+      {
+        "b": null,
+        "a": "x"
+      }
+    ],
+    "n": 7,
+    "s": "1.23",
+    "bool": true
+  },
+  "canonical_json": "{\"a\":[3,{\"a\":\"x\",\"b\":null}],\"bool\":true,\"n\":7,\"s\":\"1.23\",\"z\":\"Привет\"}"
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "maturity.snapshot/v1",
+  "as_of": "2026-08-17T12:00:00+00:00",
+  "as_of_week": 0,
+  "currency": "USD",
+  "total_open_principal": "600",
+  "immediately_callable_principal": "100",
+  "buckets": [
+    {"week": 1, "scheduled_unlock": "0", "cumulative_unlock": "0", "scheduled_noncallable_unlock": "0", "cumulative_noncallable_unlock": "0", "duration_eligible_principal": "500"},
+    {"week": 2, "scheduled_unlock": "0", "cumulative_unlock": "0", "scheduled_noncallable_unlock": "0", "cumulative_noncallable_unlock": "0", "duration_eligible_principal": "500"},
+    {"week": 3, "scheduled_unlock": "0", "cumulative_unlock": "0", "scheduled_noncallable_unlock": "0", "cumulative_noncallable_unlock": "0", "duration_eligible_principal": "500"},
+    {"week": 4, "scheduled_unlock": "300", "cumulative_unlock": "300", "scheduled_noncallable_unlock": "200", "cumulative_noncallable_unlock": "200", "duration_eligible_principal": "300"},
+    {"week": 5, "scheduled_unlock": "0", "cumulative_unlock": "300", "scheduled_noncallable_unlock": "0", "cumulative_noncallable_unlock": "200", "duration_eligible_principal": "300"},
+    {"week": 6, "scheduled_unlock": "0", "cumulative_unlock": "300", "scheduled_noncallable_unlock": "0", "cumulative_noncallable_unlock": "200", "duration_eligible_principal": "300"},
+    {"week": 7, "scheduled_unlock": "0", "cumulative_unlock": "300", "scheduled_noncallable_unlock": "0", "cumulative_noncallable_unlock": "200", "duration_eligible_principal": "300"},
+    {"week": 8, "scheduled_unlock": "300", "cumulative_unlock": "600", "scheduled_noncallable_unlock": "300", "cumulative_noncallable_unlock": "500", "duration_eligible_principal": "0"}
+  ],
+  "metadata": {
+    "horizon_weeks": 8,
+    "liquidity_outflow_rule": "immediately_callable_principal + cumulative_noncallable_unlock"
+  },
+  "digest": "05a7f12a360529058864357d0a4f526f5c7c7ed02e6fa63ff3e5447b64358416"
+}

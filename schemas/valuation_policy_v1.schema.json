@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/valuation-policy/v1",
+  "title": "SINERGY ValuationPolicy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "unitIntervalDecimal": {
+      "type": "string",
+      "pattern": "^(0|1|0\\.[0-9]*[1-9])$"
+    }
+  },
+  "required": ["schema", "policy_id", "reporting_currency", "as_of", "rules"],
+  "properties": {
+    "schema": {"const": "valuation-policy/v1"},
+    "policy_id": {"type": "string", "minLength": 1},
+    "reporting_currency": {"type": "string", "minLength": 3, "maxLength": 16},
+    "as_of": {"type": "string", "format": "date-time"},
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["valuation_class", "hard_factor", "liquid_factor", "economic_factor", "price_source_class"],
+        "properties": {
+          "valuation_class": {"type": "string", "minLength": 1},
+          "hard_factor": {"$ref": "#/$defs/unitIntervalDecimal"},
+          "liquid_factor": {"$ref": "#/$defs/unitIntervalDecimal"},
+          "economic_factor": {"$ref": "#/$defs/unitIntervalDecimal"},
+          "price_source_class": {
+            "enum": ["PAR", "BANK_BALANCE", "AUDITED_NAV", "EXECUTABLE_MARKET", "ORACLE", "MODEL", "NONE"]
+          },
+          "max_staleness_seconds": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "requires_external_enforceability": {"type": "boolean", "default": false},
+          "requires_intragroup_elimination": {"type": "boolean", "default": false},
+          "notes": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

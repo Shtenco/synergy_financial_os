@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/ledger.event/v1",
+  "title": "SINERGY LedgerEvent v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "event_id", "sequence", "event_type", "effective_at", "lines", "evidence_class"],
+  "properties": {
+    "schema": {"const": "ledger.event/v1"},
+    "event_id": {"type": "string", "minLength": 1},
+    "sequence": {"type": "integer", "minimum": 1},
+    "event_type": {"type": "string", "minLength": 1},
+    "effective_at": {"type": "string", "format": "date-time"},
+    "evidence_class": {
+      "enum": ["INTERNAL", "BANK", "PSP", "CEX_FILL", "DEX_RECEIPT", "BLOCKCHAIN_FINALITY", "CBDC", "MERCHANT", "PROJECT", "AUDITED", "OTHER"]
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["account", "currency", "debit", "credit"],
+        "properties": {
+          "account": {"type": "string", "minLength": 1},
+          "currency": {"type": "string", "minLength": 1, "maxLength": 16},
+          "debit": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+          "credit": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+          "counterparty_ref": {"type": ["string", "null"]},
+          "instrument_ref": {"type": ["string", "null"]},
+          "metadata": {"type": "object"}
+        }
+      }
+    },
+    "external_reference": {"type": ["string", "null"]},
+    "evidence_digest": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"},
+    "metadata": {"type": "object"}
+  }
+}

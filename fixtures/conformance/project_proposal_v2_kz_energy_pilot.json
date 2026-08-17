@@ -1,0 +1,74 @@
+{
+  "schema": "project.proposal/v2",
+  "project_id": "kz-energy-pilot-001",
+  "jurisdiction": "KZ",
+  "sector": "Энергетика",
+  "capex": [
+    {
+      "asset": "KZT",
+      "amount": "100000000",
+      "source_ref": "capex-plan-1"
+    }
+  ],
+  "requested_funding": [
+    {
+      "asset": "KZT",
+      "amount": "70000000",
+      "source_ref": "funding-request-1"
+    }
+  ],
+  "private_capital": [
+    {
+      "asset": "KZT",
+      "amount": "30000000",
+      "source_ref": "sponsor-capital-1"
+    }
+  ],
+  "opex_annual": [],
+  "maturity_weeks": 156,
+  "expected_cash_flows": [
+    {
+      "period": "2027",
+      "asset": "KZT",
+      "amount": "25000000",
+      "note": "base-case operating cash flow"
+    }
+  ],
+  "energy_requirement": "10 MW",
+  "labor_requirement": "120 FTE",
+  "logistics_requirement": "rail + road",
+  "fx_exposures": [
+    {
+      "asset": "USD",
+      "amount": "10000000",
+      "direction": "PAYABLE",
+      "hedged_fraction": "0.75"
+    }
+  ],
+  "risk_score": "0.25",
+  "first_loss_capital": [
+    {
+      "asset": "KZT",
+      "amount": "7000000",
+      "source_ref": "first-loss-1"
+    }
+  ],
+  "dependencies": [
+    "grid-connection",
+    "equipment-delivery"
+  ],
+  "milestones": [
+    {
+      "id": "m1",
+      "status": "PLANNED",
+      "completion": "0"
+    }
+  ],
+  "evidence_status": "MODEL_ESTIMATE",
+  "evidence_bundle_digest": null,
+  "source_vintage": "2026-08-17",
+  "metadata": {
+    "revision": 2,
+    "title": "Пилот энергетического проекта"
+  }
+}

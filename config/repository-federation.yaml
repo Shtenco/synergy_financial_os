@@ -1,0 +1,60 @@
+schema: synergy.repository-federation/v1
+updated: 2026-08-17
+
+principles:
+  evolution: additive-only
+  legacy_preservation: true
+  accounting_authority: synergy_financial_os
+  browser_is_not_accounting_authority: true
+
+repositories:
+  Shtenco/synergy_financial_os:
+    role: canonical-financial-constitution
+    status: CANONICAL_ROOT
+  Shtenco/ai_financial_system:
+    role: financial-rnd-and-reference-implementations
+    preserve_history: true
+  Shtenco/synergy_matrix_sota:
+    role: household-savings-maturity-mutual-credit
+  Shtenco/usds:
+    role: elastic-credit-money-research
+  Shtenco/synergy_eurasian:
+    role: real-economy-eiiom-capital-allocation
+  Shtenco/synergy_pay_system:
+    role: metapay-routing-settlement-compliance-reconciliation
+  Shtenco/synergychain:
+    role: portal-ogas-control-plane
+  Shtenco/synergy_ai_blockchain:
+    role: blockchain-trust-state-proof-layer
+  Shtenco/agi_olga:
+    role: olga-nexus-intelligence
+  Shtenco/ai_language:
+    role: semantic-engineering-traceability
+  Shtenco/ai_compress:
+    role: lossless-memory-mdl-archive
+  Shtenco/ai_coder:
+    role: autonomous-engineering-orchestration
+  Shtenco/cashero:
+    role: immutable-legacy-cyclic-liquidity-lineage
+    status: LEGACY
+  Shtenco/synergychain.github.io:
+    role: public-static-synergychain-surface
+    accounting_authority: false
+  Shtenco/shtencoauantai.github.io:
+    role: historical-public-quant-ai-surface
+    accounting_authority: false
+  Shtenco/shtenco.github.io:
+    role: historical-personal-research-surface
+    accounting_authority: false
+
+cross_repo_contracts:
+  - FinancialSnapshot
+  - MaturitySnapshot
+  - CreditProposal
+  - PolicyProposal
+  - PaymentIntent
+  - ExecutionPlan
+  - SettlementReceipt
+  - ProjectProposal
+  - ProductionEvidence
+  - RiskAssessment

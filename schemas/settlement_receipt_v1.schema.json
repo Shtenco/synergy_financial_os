@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/settlement.receipt/v1",
+  "title": "SINERGY SettlementReceipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "nonnegativeDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*|0\\.[0-9]*[1-9]|[1-9][0-9]*\\.[0-9]*[1-9])$"
+    },
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
+  },
+  "required": [
+    "schema",
+    "settlement_id",
+    "intent_id",
+    "providers",
+    "source_asset",
+    "source_amount",
+    "target_asset",
+    "target_amount",
+    "fees",
+    "status",
+    "finality_time",
+    "external_evidence_classes",
+    "external_references",
+    "evidence_digest",
+    "reconciled",
+    "route_id",
+    "metadata"
+  ],
+  "properties": {
+    "schema": {"const": "settlement.receipt/v1"},
+    "settlement_id": {"type": "string", "minLength": 1},
+    "intent_id": {"type": "string", "minLength": 1},
+    "providers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "source_asset": {"type": "string", "minLength": 1, "maxLength": 32},
+    "source_amount": {"$ref": "#/$defs/nonnegativeDecimal"},
+    "target_asset": {"type": "string", "minLength": 1, "maxLength": 32},
+    "target_amount": {
+      "oneOf": [
+        {"$ref": "#/$defs/nonnegativeDecimal"},
+        {"type": "null"}
+      ]
+    },
+    "fees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["asset", "amount", "kind", "economic_role", "provider_ref"],
+        "properties": {
+          "asset": {"type": "string", "minLength": 1, "maxLength": 32},
+          "amount": {"$ref": "#/$defs/nonnegativeDecimal"},
+          "kind": {"type": "string", "minLength": 1},
+          "economic_role": {
+            "enum": ["PROTOCOL_REVENUE", "PROVIDER_COST", "NETWORK_COST", "TAX", "OTHER"]
+          },
+          "provider_ref": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "status": {"enum": ["PENDING", "SETTLED", "FAILED", "REVERSED"]},
+    "finality_time": {"type": ["string", "null"], "format": "date-time"},
+    "external_evidence_classes": {
+      "type": "array",
+      "items": {
+        "enum": ["BANK", "PSP", "CEX_FILL", "DEX_RECEIPT", "BLOCKCHAIN_FINALITY", "CBDC", "MERCHANT", "OTHER"]
+      },
+      "uniqueItems": true
+    },
+    "external_references": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "evidence_digest": {
+      "oneOf": [
+        {"$ref": "#/$defs/hex64"},
+        {"type": "null"}
+      ]
+    },
+    "reconciled": {"type": "boolean"},
+    "route_id": {"type": ["string", "null"]},
+    "metadata": {"type": "object"}
+  }
+}

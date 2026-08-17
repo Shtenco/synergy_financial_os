@@ -1,0 +1,60 @@
+{
+  "schema": "financial.snapshot/v2",
+  "sequence": 10,
+  "as_of": "2026-08-17T12:00:00+00:00",
+  "accounting_perimeter": "SINERGY_CONSOLIDATED",
+  "reporting_currency": "USD",
+  "ledger_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "ledger_last_entry_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "account_registry_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "valuation_policy_id": "policy-v1",
+  "valuation_policy_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "valuation_policy_as_of": "2026-08-17T12:00:00+00:00",
+  "period_start_sequence": 5,
+  "previous_snapshot_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "hard_external_assets": "120",
+  "external_liabilities": "20",
+  "immediate_external_liabilities": "10",
+  "hard_nav": "100",
+  "liquid_nav": "110",
+  "economic_nav": "130",
+  "hard_coverage": "6",
+  "net_new_capital": "0",
+  "realized_external_revenue": "12",
+  "realized_external_pnl": "10",
+  "hard_nav_surplus_after_capital": "10",
+  "required_retention": "2",
+  "loss_carryforward": "1",
+  "period_profit_budget": "7",
+  "required_hard_nav_buffer": "95",
+  "distribution_capacity": "5",
+  "liquidity_horizons": [
+    {
+      "horizon_weeks": 1,
+      "liquid_resources": "50",
+      "expected_net_outflows": "10",
+      "lcr": "5",
+      "liquidity_surplus": "40"
+    },
+    {
+      "horizon_weeks": 4,
+      "liquid_resources": "60",
+      "expected_net_outflows": "20",
+      "lcr": "3",
+      "liquidity_surplus": "40"
+    },
+    {
+      "horizon_weeks": 8,
+      "liquid_resources": "70",
+      "expected_net_outflows": "0",
+      "lcr": null,
+      "liquidity_surplus": "70"
+    }
+  ],
+  "maturity_snapshot_refs": [
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ],
+  "policy_mode": "NORMAL",
+  "invariant_failures": [],
+  "digest": "f0554b81af1924b9399f7d47a25af1a9d28ebf7373545ba72fea99788648a720"
+}
