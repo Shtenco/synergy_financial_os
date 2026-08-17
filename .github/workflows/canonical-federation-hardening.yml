@@ -6,6 +6,7 @@ on:
       - "sinergy_financial_os/__init__.py"
       - "sinergy_financial_os/canonical_json.py"
       - "sinergy_financial_os/numeric.py"
+      - "sinergy_financial_os/valuation.py"
       - "sinergy_financial_os/snapshot.py"
       - "sinergy_financial_os/maturity_bridge.py"
       - "sinergy_financial_os/settlement_bridge.py"
@@ -13,6 +14,7 @@ on:
       - "sinergy_financial_os/ai_boundary.py"
       - "sinergy_financial_os/project_bridge.py"
       - "sinergy_financial_os/project_bridge_v2.py"
+      - "schemas/valuation_policy_v1.schema.json"
       - "schemas/financial_snapshot_v2.schema.json"
       - "schemas/maturity_snapshot_v1.schema.json"
       - "schemas/settlement_receipt_v1.schema.json"
@@ -24,6 +26,8 @@ on:
       - "fixtures/conformance/**"
       - "tests/test_public_api.py"
       - "tests/test_canonical_json.py"
+      - "tests/test_valuation.py"
+      - "tests/test_valuation_policy.py"
       - "tests/test_snapshot_v2.py"
       - "tests/test_snapshot_v2_direct_validation.py"
       - "tests/test_snapshot_v2_conformance_fixture.py"
@@ -70,6 +74,7 @@ jobs:
           sinergy_financial_os/__init__.py
           sinergy_financial_os/canonical_json.py
           sinergy_financial_os/numeric.py
+          sinergy_financial_os/valuation.py
           sinergy_financial_os/snapshot.py
           sinergy_financial_os/maturity_bridge.py
           sinergy_financial_os/settlement_bridge.py
@@ -83,6 +88,8 @@ jobs:
           python -m pytest -q
           tests/test_public_api.py
           tests/test_canonical_json.py
+          tests/test_valuation.py
+          tests/test_valuation_policy.py
           tests/test_snapshot_v2.py
           tests/test_snapshot_v2_direct_validation.py
           tests/test_snapshot_v2_conformance_fixture.py
