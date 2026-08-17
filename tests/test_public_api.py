@@ -18,6 +18,7 @@ PUBLIC_BOUNDARY_SYMBOLS = {
     "liquidity_horizon_states_from_maturity",
     "project_proposal_v2_digest",
     "requirement_ids_from_registry",
+    "requirement_registry_digest",
     "review_ai_policy_proposal",
     "screen_project_for_financial_review",
     "screen_project_v2_for_financial_review",
