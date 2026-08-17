@@ -13,14 +13,30 @@ from .core import (
     liquidity_surplus,
 )
 from .ledger import AppendOnlyJournal, JournalEntry, JournalLine
+from .reporting import (
+    AccountClass,
+    ConsolidationClass,
+    FlowType,
+    ReportingAccountSpec,
+    ReportingEntry,
+    ReportingLedger,
+    ReportingLine,
+)
 from .valuation import ValuationRule, ValuationTiers
 
 __all__ = [
+    "AccountClass",
     "AccountingInvariantError",
     "AppendOnlyJournal",
+    "ConsolidationClass",
     "FinancialState",
+    "FlowType",
     "JournalEntry",
     "JournalLine",
+    "ReportingAccountSpec",
+    "ReportingEntry",
+    "ReportingLedger",
+    "ReportingLine",
     "ValuationRule",
     "ValuationTiers",
     "coverage_deficit",
