@@ -130,3 +130,49 @@ def coverage_deficit(
     """Positive value means uncovered debt above the permitted capacity."""
 
     return max(ZERO, _d(debt_outstanding) - _d(debt_capacity))
+
+
+def liquidity_coverage_ratio(
+    liquid_resources: Decimal | int | str,
+    expected_net_outflows: Decimal | int | str,
+) -> Decimal | None:
+    """Return LCR for one declared horizon.
+
+    `None` means the denominator is zero and the ratio is not numerically
+    defined. Callers may treat that state as no outflow pressure, but must not
+    serialize an invented finite or infinite ratio.
+    """
+
+    resources = _d(liquid_resources)
+    outflows = _d(expected_net_outflows)
+    if resources < ZERO or outflows < ZERO:
+        raise AccountingInvariantError("liquid resources and outflows must be non-negative")
+    if outflows == ZERO:
+        return None
+    return resources / outflows
+
+
+def liquidity_surplus(
+    liquid_resources: Decimal | int | str,
+    expected_net_outflows: Decimal | int | str,
+) -> Decimal:
+    resources = _d(liquid_resources)
+    outflows = _d(expected_net_outflows)
+    if resources < ZERO or outflows < ZERO:
+        raise AccountingInvariantError("liquid resources and outflows must be non-negative")
+    return resources - outflows
+
+
+def ensure_lcr_floor(
+    liquid_resources: Decimal | int | str,
+    expected_net_outflows: Decimal | int | str,
+    minimum_ratio: Decimal | int | str,
+) -> None:
+    """Fail closed when a non-zero-outflow horizon breaches its LCR floor."""
+
+    floor = _d(minimum_ratio)
+    if floor < ZERO:
+        raise AccountingInvariantError("minimum_ratio must be non-negative")
+    ratio = liquidity_coverage_ratio(liquid_resources, expected_net_outflows)
+    if ratio is not None and ratio < floor:
+        raise AccountingInvariantError(f"LCR floor breached: ratio={ratio} floor={floor}")
