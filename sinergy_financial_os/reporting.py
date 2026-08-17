@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import defaultdict
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Iterable, Mapping
@@ -167,19 +167,26 @@ class ReportingEntry:
     def __post_init__(self) -> None:
         if self.sequence < 1:
             raise AccountingInvariantError("sequence must be >= 1")
-        if not self.event_id.strip() or not self.reference.strip():
+        event_id = self.event_id.strip()
+        reference = self.reference.strip()
+        if not event_id or not reference:
             raise AccountingInvariantError("event_id and reference are required")
         if len(self.lines) < 2:
             raise AccountingInvariantError("reporting entry requires at least two lines")
-        _hex64(self.previous_entry_digest, "previous_entry_digest")
-        if self.evidence_digest is not None:
-            _hex64(self.evidence_digest, "evidence_digest")
+        previous_digest = _hex64(self.previous_entry_digest, "previous_entry_digest")
+        evidence_digest = self.evidence_digest
+        if evidence_digest is not None:
+            evidence_digest = _hex64(evidence_digest, "evidence_digest")
         debit_total = sum((line.debit for line in self.lines), ZERO)
         credit_total = sum((line.credit for line in self.lines), ZERO)
         if debit_total <= ZERO or debit_total != credit_total:
             raise AccountingInvariantError(
                 f"unbalanced reporting entry: debits={debit_total} credits={credit_total}"
             )
+        object.__setattr__(self, "event_id", event_id)
+        object.__setattr__(self, "reference", reference)
+        object.__setattr__(self, "previous_entry_digest", previous_digest)
+        object.__setattr__(self, "evidence_digest", evidence_digest)
 
     def canonical_dict(self) -> dict[str, Any]:
         return {
@@ -351,6 +358,11 @@ class ReportingLedger:
                     raise AccountingInvariantError(
                         f"missing valuation rule for {spec.valuation_class}"
                     ) from exc
+                if rule.valuation_class != spec.valuation_class:
+                    raise AccountingInvariantError(
+                        "valuation policy key/class mismatch for "
+                        f"{spec.account_id}: {spec.valuation_class} != {rule.valuation_class}"
+                    )
                 valued = rule.apply(balance)
                 hard_assets += valued.hard
                 liquid_assets += valued.liquid
