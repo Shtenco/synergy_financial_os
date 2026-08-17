@@ -221,6 +221,49 @@ class FinancialSnapshotV2:
                 raise AccountingInvariantError("hard_coverage must be non-negative")
             object.__setattr__(self, "hard_coverage", hard_coverage)
 
+        if self.immediate_external_liabilities > self.external_liabilities:
+            raise AccountingInvariantError(
+                "immediate_external_liabilities cannot exceed external_liabilities"
+            )
+        expected_hard_nav = self.hard_external_assets - self.external_liabilities
+        if self.hard_nav != expected_hard_nav:
+            raise AccountingInvariantError(
+                f"hard_nav mismatch: expected {expected_hard_nav}, got {self.hard_nav}"
+            )
+        if not self.hard_nav <= self.liquid_nav <= self.economic_nav:
+            raise AccountingInvariantError("NAV tiers must satisfy hard_nav <= liquid_nav <= economic_nav")
+
+        if self.external_liabilities == ZERO:
+            if self.hard_coverage is not None:
+                raise AccountingInvariantError(
+                    "hard_coverage must be null when external_liabilities is zero"
+                )
+        else:
+            expected_coverage = self.hard_external_assets / self.external_liabilities
+            if self.hard_coverage != expected_coverage:
+                raise AccountingInvariantError(
+                    f"hard_coverage mismatch: expected {expected_coverage}, got {self.hard_coverage}"
+                )
+
+        expected_profit_budget = distributable_profit(
+            self.realized_external_pnl,
+            required_retention=self.required_retention,
+            loss_carryforward=self.loss_carryforward,
+        )
+        if self.period_profit_budget != expected_profit_budget:
+            raise AccountingInvariantError(
+                "period_profit_budget does not match realized P&L retention/loss policy"
+            )
+        expected_distribution_capacity = distribution_capacity(
+            self.period_profit_budget,
+            hard_nav=self.hard_nav,
+            required_hard_nav_buffer=self.required_hard_nav_buffer,
+        )
+        if self.distribution_capacity != expected_distribution_capacity:
+            raise AccountingInvariantError(
+                "distribution_capacity does not match profit budget and HardNAV solvency headroom"
+            )
+
         horizons = tuple(sorted(self.liquidity_horizons, key=lambda item: item.horizon_weeks))
         if tuple(item.horizon_weeks for item in horizons) != REQUIRED_LIQUIDITY_HORIZONS:
             raise AccountingInvariantError("snapshot requires exactly 1w, 4w and 8w liquidity horizons")
