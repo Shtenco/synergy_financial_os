@@ -169,10 +169,15 @@
       "id": "REQ-AI-001",
       "statement": "Raw OLGA/NEXUS output must never mutate the canonical ledger directly; AI emits bounded proposals only.",
       "owner": "Shtenco/agi_olga",
-      "implementation": ["integration/SINERGY_FINANCIAL_OS_AI_BOUNDARY_20260817.md", "integration/policy_proposal_v1.schema.json"],
-      "tests": [],
-      "implementation_status": "DOCUMENTED",
-      "verification_status": "REQUIRES_FUTURE_INTEGRATION_TEST"
+      "implementation": [
+        "integration/SINERGY_FINANCIAL_OS_AI_BOUNDARY_20260817.md",
+        "integration/policy_proposal_v1.schema.json",
+        "integration/policy_proposal_v2.schema.json",
+        "integration/check_policy_proposal_v2_schema.py"
+      ],
+      "tests": ["integration/check_policy_proposal_v2_schema.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
     },
     {
       "id": "REQ-CHAIN-001",
