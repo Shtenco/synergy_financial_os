@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Iterable
 
+from .canonical_json import MAX_SAFE_JSON_INTEGER, canonical_json_digest
 from .core import (
     AccountingInvariantError,
     distributable_profit,
@@ -15,6 +14,7 @@ from .core import (
     liquidity_coverage_ratio,
     liquidity_surplus,
 )
+from .numeric import canonical_decimal_text, finite_decimal
 from .reporting import ReportingLedger
 from .reporting_metrics import (
     net_new_capital_since,
@@ -27,27 +27,37 @@ from .valuation import ValuationPolicy
 ZERO = Decimal("0")
 POLICY_MODES = frozenset({"GROWTH", "NORMAL", "DEFENSE", "EMERGENCY"})
 REQUIRED_LIQUIDITY_HORIZONS = (1, 4, 8)
+SIGNED_DECIMAL_FIELDS = (
+    "hard_nav",
+    "liquid_nav",
+    "economic_nav",
+    "net_new_capital",
+    "realized_external_pnl",
+    "hard_nav_surplus_after_capital",
+)
+NONNEGATIVE_DECIMAL_FIELDS = (
+    "hard_external_assets",
+    "external_liabilities",
+    "immediate_external_liabilities",
+    "realized_external_revenue",
+    "required_retention",
+    "loss_carryforward",
+    "period_profit_budget",
+    "required_hard_nav_buffer",
+    "distribution_capacity",
+)
 
 
-def _d(value: Decimal | int | str) -> Decimal:
-    if isinstance(value, Decimal):
-        return value
-    return Decimal(str(value))
+def _d(value: Decimal | int | str, field_name: str = "value") -> Decimal:
+    return finite_decimal(value, field_name)
 
 
-def _decimal_text(value: Decimal) -> str:
-    return format(value, "f")
+def _decimal_text(value: Decimal, field_name: str = "value") -> str:
+    return canonical_decimal_text(value, field_name)
 
 
 def _canonical_digest(payload: Any) -> str:
-    encoded = json.dumps(
-        payload,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        allow_nan=False,
-    ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return canonical_json_digest(payload)
 
 
 def _require_hex64(value: str, field_name: str) -> str:
@@ -55,6 +65,19 @@ def _require_hex64(value: str, field_name: str) -> str:
     if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
         raise AccountingInvariantError(f"{field_name} must be a 64-character hex digest")
     return normalized
+
+
+def _require_safe_nonnegative_integer(value: int, field_name: str) -> int:
+    if (
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or value < 0
+        or value > MAX_SAFE_JSON_INTEGER
+    ):
+        raise AccountingInvariantError(
+            f"{field_name} must be a non-negative cross-language safe integer"
+        )
+    return value
 
 
 @dataclass(frozen=True)
@@ -66,8 +89,8 @@ class LiquidityHorizonState:
     def __post_init__(self) -> None:
         if self.horizon_weeks not in REQUIRED_LIQUIDITY_HORIZONS:
             raise AccountingInvariantError("liquidity horizon must be 1, 4 or 8 weeks")
-        resources = _d(self.liquid_resources)
-        outflows = _d(self.expected_net_outflows)
+        resources = _d(self.liquid_resources, "liquid_resources")
+        outflows = _d(self.expected_net_outflows, "expected_net_outflows")
         if resources < ZERO or outflows < ZERO:
             raise AccountingInvariantError(
                 "liquid_resources and expected_net_outflows must be non-negative"
@@ -86,10 +109,13 @@ class LiquidityHorizonState:
     def canonical_dict(self) -> dict[str, Any]:
         return {
             "horizon_weeks": self.horizon_weeks,
-            "liquid_resources": _decimal_text(self.liquid_resources),
-            "expected_net_outflows": _decimal_text(self.expected_net_outflows),
-            "lcr": None if self.lcr is None else _decimal_text(self.lcr),
-            "liquidity_surplus": _decimal_text(self.surplus),
+            "liquid_resources": _decimal_text(self.liquid_resources, "liquid_resources"),
+            "expected_net_outflows": _decimal_text(
+                self.expected_net_outflows,
+                "expected_net_outflows",
+            ),
+            "lcr": None if self.lcr is None else _decimal_text(self.lcr, "lcr"),
+            "liquidity_surplus": _decimal_text(self.surplus, "liquidity_surplus"),
         }
 
 
@@ -129,8 +155,8 @@ class FinancialSnapshotV2:
     invariant_failures: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if self.sequence < 0 or self.period_start_sequence < 0:
-            raise AccountingInvariantError("snapshot sequences must be non-negative")
+        _require_safe_nonnegative_integer(self.sequence, "sequence")
+        _require_safe_nonnegative_integer(self.period_start_sequence, "period_start_sequence")
         if self.period_start_sequence > self.sequence:
             raise AccountingInvariantError("period_start_sequence cannot exceed sequence")
         if self.as_of.tzinfo is None or self.as_of.utcoffset() is None:
@@ -178,12 +204,36 @@ class FinancialSnapshotV2:
                 _require_hex64(self.previous_snapshot_digest, "previous_snapshot_digest"),
             )
 
+        for field_name in SIGNED_DECIMAL_FIELDS:
+            object.__setattr__(
+                self,
+                field_name,
+                _d(getattr(self, field_name), field_name),
+            )
+        for field_name in NONNEGATIVE_DECIMAL_FIELDS:
+            value = _d(getattr(self, field_name), field_name)
+            if value < ZERO:
+                raise AccountingInvariantError(f"{field_name} must be non-negative")
+            object.__setattr__(self, field_name, value)
+        if self.hard_coverage is not None:
+            hard_coverage = _d(self.hard_coverage, "hard_coverage")
+            if hard_coverage < ZERO:
+                raise AccountingInvariantError("hard_coverage must be non-negative")
+            object.__setattr__(self, "hard_coverage", hard_coverage)
+
         horizons = tuple(sorted(self.liquidity_horizons, key=lambda item: item.horizon_weeks))
         if tuple(item.horizon_weeks for item in horizons) != REQUIRED_LIQUIDITY_HORIZONS:
             raise AccountingInvariantError("snapshot requires exactly 1w, 4w and 8w liquidity horizons")
         object.__setattr__(self, "liquidity_horizons", horizons)
 
-        refs = tuple(sorted({_require_hex64(ref, "maturity_snapshot_ref") for ref in self.maturity_snapshot_refs}))
+        refs = tuple(
+            sorted(
+                {
+                    _require_hex64(ref, "maturity_snapshot_ref")
+                    for ref in self.maturity_snapshot_refs
+                }
+            )
+        )
         object.__setattr__(self, "maturity_snapshot_refs", refs)
         failures = tuple(sorted({item.strip() for item in self.invariant_failures if item.strip()}))
         object.__setattr__(self, "invariant_failures", failures)
@@ -203,22 +253,44 @@ class FinancialSnapshotV2:
             "valuation_policy_as_of": self.valuation_policy_as_of.isoformat(),
             "period_start_sequence": self.period_start_sequence,
             "previous_snapshot_digest": self.previous_snapshot_digest,
-            "hard_external_assets": _decimal_text(self.hard_external_assets),
-            "external_liabilities": _decimal_text(self.external_liabilities),
-            "immediate_external_liabilities": _decimal_text(self.immediate_external_liabilities),
-            "hard_nav": _decimal_text(self.hard_nav),
-            "liquid_nav": _decimal_text(self.liquid_nav),
-            "economic_nav": _decimal_text(self.economic_nav),
-            "hard_coverage": None if self.hard_coverage is None else _decimal_text(self.hard_coverage),
-            "net_new_capital": _decimal_text(self.net_new_capital),
-            "realized_external_revenue": _decimal_text(self.realized_external_revenue),
-            "realized_external_pnl": _decimal_text(self.realized_external_pnl),
-            "hard_nav_surplus_after_capital": _decimal_text(self.hard_nav_surplus_after_capital),
-            "required_retention": _decimal_text(self.required_retention),
-            "loss_carryforward": _decimal_text(self.loss_carryforward),
-            "period_profit_budget": _decimal_text(self.period_profit_budget),
-            "required_hard_nav_buffer": _decimal_text(self.required_hard_nav_buffer),
-            "distribution_capacity": _decimal_text(self.distribution_capacity),
+            "hard_external_assets": _decimal_text(self.hard_external_assets, "hard_external_assets"),
+            "external_liabilities": _decimal_text(self.external_liabilities, "external_liabilities"),
+            "immediate_external_liabilities": _decimal_text(
+                self.immediate_external_liabilities,
+                "immediate_external_liabilities",
+            ),
+            "hard_nav": _decimal_text(self.hard_nav, "hard_nav"),
+            "liquid_nav": _decimal_text(self.liquid_nav, "liquid_nav"),
+            "economic_nav": _decimal_text(self.economic_nav, "economic_nav"),
+            "hard_coverage": (
+                None
+                if self.hard_coverage is None
+                else _decimal_text(self.hard_coverage, "hard_coverage")
+            ),
+            "net_new_capital": _decimal_text(self.net_new_capital, "net_new_capital"),
+            "realized_external_revenue": _decimal_text(
+                self.realized_external_revenue,
+                "realized_external_revenue",
+            ),
+            "realized_external_pnl": _decimal_text(
+                self.realized_external_pnl,
+                "realized_external_pnl",
+            ),
+            "hard_nav_surplus_after_capital": _decimal_text(
+                self.hard_nav_surplus_after_capital,
+                "hard_nav_surplus_after_capital",
+            ),
+            "required_retention": _decimal_text(self.required_retention, "required_retention"),
+            "loss_carryforward": _decimal_text(self.loss_carryforward, "loss_carryforward"),
+            "period_profit_budget": _decimal_text(self.period_profit_budget, "period_profit_budget"),
+            "required_hard_nav_buffer": _decimal_text(
+                self.required_hard_nav_buffer,
+                "required_hard_nav_buffer",
+            ),
+            "distribution_capacity": _decimal_text(
+                self.distribution_capacity,
+                "distribution_capacity",
+            ),
             "liquidity_horizons": [item.canonical_dict() for item in self.liquidity_horizons],
             "maturity_snapshot_refs": list(self.maturity_snapshot_refs),
             "policy_mode": self.policy_mode,
@@ -287,9 +359,9 @@ def capture_financial_snapshot_v2(
         previous_hard_nav = previous_snapshot.hard_nav
         previous_digest = previous_snapshot.digest
 
-    retention = _d(required_retention)
-    loss_cf = _d(loss_carryforward)
-    hard_buffer = _d(required_hard_nav_buffer)
+    retention = _d(required_retention, "required_retention")
+    loss_cf = _d(loss_carryforward, "loss_carryforward")
+    hard_buffer = _d(required_hard_nav_buffer, "required_hard_nav_buffer")
     if retention < ZERO or loss_cf < ZERO or hard_buffer < ZERO:
         raise AccountingInvariantError(
             "required_retention, loss_carryforward and required_hard_nav_buffer must be non-negative"
