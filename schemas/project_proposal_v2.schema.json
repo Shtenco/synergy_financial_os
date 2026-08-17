@@ -6,11 +6,17 @@
   "additionalProperties": false,
   "$defs": {
     "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
-    "decimal": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$"},
-    "nonnegativeDecimal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "decimal": {
+      "type": "string",
+      "pattern": "^(0|-?[1-9][0-9]*|-?0\\.[0-9]*[1-9]|-?[1-9][0-9]*\\.[0-9]*[1-9])$"
+    },
+    "nonnegativeDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*|0\\.[0-9]*[1-9]|[1-9][0-9]*\\.[0-9]*[1-9])$"
+    },
     "unitIntervalDecimal": {
       "type": "string",
-      "pattern": "^(0(\\.[0-9]+)?|1(\\.0+)?)$"
+      "pattern": "^(0|1|0\\.[0-9]*[1-9])$"
     },
     "money": {
       "type": "object",
@@ -46,28 +52,12 @@
     }
   },
   "required": [
-    "schema",
-    "project_id",
-    "jurisdiction",
-    "sector",
-    "capex",
-    "requested_funding",
-    "private_capital",
-    "opex_annual",
-    "maturity_weeks",
-    "expected_cash_flows",
-    "energy_requirement",
-    "labor_requirement",
-    "logistics_requirement",
-    "fx_exposures",
-    "risk_score",
-    "first_loss_capital",
-    "dependencies",
-    "milestones",
-    "evidence_status",
-    "evidence_bundle_digest",
-    "source_vintage",
-    "metadata"
+    "schema", "project_id", "jurisdiction", "sector", "capex",
+    "requested_funding", "private_capital", "opex_annual", "maturity_weeks",
+    "expected_cash_flows", "energy_requirement", "labor_requirement",
+    "logistics_requirement", "fx_exposures", "risk_score", "first_loss_capital",
+    "dependencies", "milestones", "evidence_status", "evidence_bundle_digest",
+    "source_vintage", "metadata"
   ],
   "properties": {
     "schema": {"const": "project.proposal/v2"},
