@@ -28,6 +28,7 @@ on:
       - "tests/test_maturity_bridge.py"
       - "tests/test_maturity_v1_conformance_fixture.py"
       - "tests/test_settlement_bridge.py"
+      - "tests/test_settlement_v1_conformance_fixture.py"
       - "tests/test_project_bridge_v2.py"
       - "tests/test_project_v2_conformance_fixture.py"
       - "tests/test_registry_integrity.py"
@@ -84,6 +85,7 @@ jobs:
           tests/test_maturity_bridge.py
           tests/test_maturity_v1_conformance_fixture.py
           tests/test_settlement_bridge.py
+          tests/test_settlement_v1_conformance_fixture.py
           tests/test_project_bridge_v2.py
           tests/test_project_v2_conformance_fixture.py
           tests/test_registry_integrity.py
