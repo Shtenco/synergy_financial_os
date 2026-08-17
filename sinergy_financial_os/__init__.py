@@ -22,6 +22,11 @@ from .reporting import (
     ReportingLedger,
     ReportingLine,
 )
+from .reporting_metrics import (
+    hard_nav_effect,
+    net_new_capital_since,
+    realized_external_revenue_since,
+)
 from .valuation import ValuationRule, ValuationTiers
 
 __all__ = [
@@ -45,6 +50,9 @@ __all__ = [
     "ensure_balanced_journal",
     "ensure_lcr_floor",
     "ensure_maturity_match",
+    "hard_nav_effect",
     "liquidity_coverage_ratio",
     "liquidity_surplus",
+    "net_new_capital_since",
+    "realized_external_revenue_since",
 ]
