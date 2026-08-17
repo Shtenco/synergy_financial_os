@@ -4,11 +4,22 @@
   "title": "SINERGY MaturitySnapshot v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "as_of", "currency", "buckets", "lcr_1w", "lcr_4w", "lcr_8w"],
+  "required": [
+    "schema",
+    "as_of",
+    "as_of_week",
+    "currency",
+    "total_open_principal",
+    "immediately_callable_principal",
+    "buckets"
+  ],
   "properties": {
     "schema": {"const": "maturity.snapshot/v1"},
     "as_of": {"type": "string", "format": "date-time"},
+    "as_of_week": {"type": "integer", "minimum": 0},
     "currency": {"type": "string", "minLength": 3, "maxLength": 16},
+    "total_open_principal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "immediately_callable_principal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
     "buckets": {
       "type": "array",
       "minItems": 1,
@@ -16,19 +27,21 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["week", "funding_principal", "scheduled_unlock", "eligible_credit_capacity"],
+        "required": [
+          "week",
+          "scheduled_unlock",
+          "cumulative_unlock",
+          "duration_eligible_principal"
+        ],
         "properties": {
           "week": {"type": "integer", "minimum": 1, "maximum": 100},
-          "funding_principal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
           "scheduled_unlock": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-          "eligible_credit_capacity": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"}
+          "cumulative_unlock": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+          "duration_eligible_principal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"}
         }
       }
     },
-    "lcr_1w": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "lcr_4w": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "lcr_8w": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "funding_shortfall": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "digest": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"}
+    "digest": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"},
+    "metadata": {"type": "object"}
   }
 }
