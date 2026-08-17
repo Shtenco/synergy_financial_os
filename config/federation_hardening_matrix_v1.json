@@ -25,7 +25,7 @@
     },
     {
       "control_id": "HARDEN-FIN-VALUATION-001",
-      "canonical_requirement_refs": ["REQ-FIN-004"],
+      "canonical_requirement_refs": ["REQ-FIN-006"],
       "repository": "Shtenco/synergy_financial_os",
       "branch": "test-bootstrap",
       "statement": "ValuationPolicy must exist as a digest-bound, timezone-aware, rule-order-independent primitive; valuation factors must be finite and price-source classes closed before a FinancialSnapshot can bind their digest.",
