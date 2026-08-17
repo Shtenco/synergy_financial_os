@@ -6,11 +6,15 @@ on:
       - "sinergy_financial_os/canonical_json.py"
       - "sinergy_financial_os/numeric.py"
       - "sinergy_financial_os/snapshot.py"
+      - "sinergy_financial_os/maturity_bridge.py"
+      - "sinergy_financial_os/settlement_bridge.py"
       - "sinergy_financial_os/governance.py"
       - "sinergy_financial_os/ai_boundary.py"
       - "sinergy_financial_os/project_bridge.py"
       - "sinergy_financial_os/project_bridge_v2.py"
       - "schemas/financial_snapshot_v2.schema.json"
+      - "schemas/maturity_snapshot_v1.schema.json"
+      - "schemas/settlement_receipt_v1.schema.json"
       - "schemas/project_proposal_v2.schema.json"
       - "schemas/project_screening_v1.schema.json"
       - "config/schema_registry_v1.json"
@@ -21,6 +25,9 @@ on:
       - "tests/test_snapshot_v2.py"
       - "tests/test_snapshot_v2_direct_validation.py"
       - "tests/test_snapshot_v2_conformance_fixture.py"
+      - "tests/test_maturity_bridge.py"
+      - "tests/test_maturity_v1_conformance_fixture.py"
+      - "tests/test_settlement_bridge.py"
       - "tests/test_project_bridge_v2.py"
       - "tests/test_project_v2_conformance_fixture.py"
       - "tests/test_registry_integrity.py"
@@ -60,6 +67,8 @@ jobs:
           sinergy_financial_os/canonical_json.py
           sinergy_financial_os/numeric.py
           sinergy_financial_os/snapshot.py
+          sinergy_financial_os/maturity_bridge.py
+          sinergy_financial_os/settlement_bridge.py
           sinergy_financial_os/governance.py
           sinergy_financial_os/ai_boundary.py
           sinergy_financial_os/project_bridge.py
@@ -72,6 +81,9 @@ jobs:
           tests/test_snapshot_v2.py
           tests/test_snapshot_v2_direct_validation.py
           tests/test_snapshot_v2_conformance_fixture.py
+          tests/test_maturity_bridge.py
+          tests/test_maturity_v1_conformance_fixture.py
+          tests/test_settlement_bridge.py
           tests/test_project_bridge_v2.py
           tests/test_project_v2_conformance_fixture.py
           tests/test_registry_integrity.py
