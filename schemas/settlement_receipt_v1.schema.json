@@ -4,6 +4,13 @@
   "title": "SINERGY SettlementReceipt v1",
   "type": "object",
   "additionalProperties": false,
+  "$defs": {
+    "nonnegativeDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*|0\\.[0-9]*[1-9]|[1-9][0-9]*\\.[0-9]*[1-9])$"
+    },
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
+  },
   "required": [
     "schema",
     "settlement_id",
@@ -18,7 +25,10 @@
     "finality_time",
     "external_evidence_classes",
     "external_references",
-    "reconciled"
+    "evidence_digest",
+    "reconciled",
+    "route_id",
+    "metadata"
   ],
   "properties": {
     "schema": {"const": "settlement.receipt/v1"},
@@ -30,19 +40,27 @@
       "uniqueItems": true
     },
     "source_asset": {"type": "string", "minLength": 1, "maxLength": 32},
-    "source_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "source_amount": {"$ref": "#/$defs/nonnegativeDecimal"},
     "target_asset": {"type": "string", "minLength": 1, "maxLength": 32},
-    "target_amount": {"type": ["string", "null"], "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "target_amount": {
+      "oneOf": [
+        {"$ref": "#/$defs/nonnegativeDecimal"},
+        {"type": "null"}
+      ]
+    },
     "fees": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["asset", "amount", "kind"],
+        "required": ["asset", "amount", "kind", "economic_role", "provider_ref"],
         "properties": {
           "asset": {"type": "string", "minLength": 1, "maxLength": 32},
-          "amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+          "amount": {"$ref": "#/$defs/nonnegativeDecimal"},
           "kind": {"type": "string", "minLength": 1},
+          "economic_role": {
+            "enum": ["PROTOCOL_REVENUE", "PROVIDER_COST", "NETWORK_COST", "TAX", "OTHER"]
+          },
           "provider_ref": {"type": ["string", "null"]}
         }
       }
@@ -61,7 +79,12 @@
       "items": {"type": "string", "minLength": 1},
       "uniqueItems": true
     },
-    "evidence_digest": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"},
+    "evidence_digest": {
+      "oneOf": [
+        {"$ref": "#/$defs/hex64"},
+        {"type": "null"}
+      ]
+    },
     "reconciled": {"type": "boolean"},
     "route_id": {"type": ["string", "null"]},
     "metadata": {"type": "object"}
