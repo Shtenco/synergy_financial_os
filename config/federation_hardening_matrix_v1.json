@@ -1,0 +1,47 @@
+{
+  "schema": "sinergy.federation-hardening-matrix/v1",
+  "as_of": "2026-08-17",
+  "verification_rule": "IMPLEMENTED/ADDRESSED means code or schema exists on the named draft branch. It is not VERIFIED until the configured runner executes the mapped tests successfully.",
+  "controls": [
+    {
+      "requirement_id": "REQ-MAT-006",
+      "repository": "Shtenco/synergy_matrix_sota",
+      "branch": "feat/canonical-household-capital-os-20260817",
+      "statement": "Household tranche principal must reject NaN and +/-Infinity before entering maturity or funding calculations.",
+      "implementation": ["sinergy_matrix_sota/core.py"],
+      "tests": ["tests/test_numeric_safety.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "requirement_id": "REQ-PAY-005",
+      "repository": "Shtenco/synergy_pay_system",
+      "branch": "docs/financial-os-federation-boundary-20260817",
+      "statement": "Observed settlement fee amounts and exported decimal amounts must reject NaN and +/-Infinity before federation serialization.",
+      "implementation": ["src/synergy_pay/financial_os_adapter.py"],
+      "tests": ["tests/test_financial_os_adapter.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "requirement_id": "REQ-EUR-005",
+      "repository": "Shtenco/synergy_eurasian",
+      "branch": "feat/eiiom-real-economy-os-20260817",
+      "statement": "Project money, cash-flow, FX exposure, hedge and risk values must reject NaN and +/-Infinity before project export or screening.",
+      "implementation": ["sinergy_eurasian/project.py"],
+      "tests": ["tests/test_numeric_safety.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "requirement_id": "REQ-TRUST-002",
+      "repository": "Shtenco/synergy_ai_blockchain",
+      "branch": "feat/trust-state-proof-layer-20260817",
+      "statement": "A commitment digest must be bound to an allowed logical-domain/schema pair so the same bytes cannot be reinterpreted as a different financial object type.",
+      "implementation": [],
+      "tests": [],
+      "implementation_status": "PLANNED_NEXT",
+      "verification_status": "NOT_IMPLEMENTED"
+    }
+  ]
+}
