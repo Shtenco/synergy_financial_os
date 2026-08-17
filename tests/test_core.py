@@ -8,9 +8,11 @@ from sinergy_financial_os import (
     coverage_deficit,
     debt_capacity_gap,
     distributable_profit,
+    distribution_capacity,
     ensure_balanced_journal,
     ensure_lcr_floor,
     ensure_maturity_match,
+    hard_nav_surplus_after_capital,
     liquidity_coverage_ratio,
     liquidity_surplus,
 )
@@ -38,13 +40,30 @@ def test_state_rejects_invalid_nav_asset_order() -> None:
         )
 
 
-def test_new_capital_is_not_distributable_profit() -> None:
-    assert distributable_profit("100", "150", "50") == Decimal("0")
-    assert distributable_profit("100", "160", "50") == Decimal("10")
+def test_hard_nav_surplus_after_capital_is_diagnostic_not_profit() -> None:
+    assert hard_nav_surplus_after_capital("100", "150", "50") == Decimal("0")
+    assert hard_nav_surplus_after_capital("100", "160", "50") == Decimal("10")
+    assert hard_nav_surplus_after_capital("100", "80", "0") == Decimal("-20")
 
 
-def test_distribution_capacity_floors_at_zero_without_hiding_nav_loss() -> None:
-    assert distributable_profit("100", "80", "0") == Decimal("0")
+def test_distributable_profit_comes_from_realized_external_pnl() -> None:
+    assert distributable_profit("10") == Decimal("10")
+    assert distributable_profit("10", required_retention="3") == Decimal("7")
+    assert distributable_profit("10", required_retention="3", loss_carryforward="8") == Decimal("0")
+    assert distributable_profit("-5") == Decimal("0")
+
+
+def test_distribution_capacity_is_bounded_by_hard_nav_buffer() -> None:
+    assert distribution_capacity("10", hard_nav="30", required_hard_nav_buffer="15") == Decimal("10")
+    assert distribution_capacity("20", hard_nav="30", required_hard_nav_buffer="15") == Decimal("15")
+    assert distribution_capacity("20", hard_nav="10", required_hard_nav_buffer="15") == Decimal("0")
+
+
+def test_profit_budget_inputs_reject_negative_retention_or_budget() -> None:
+    with pytest.raises(AccountingInvariantError):
+        distributable_profit("10", required_retention="-1")
+    with pytest.raises(AccountingInvariantError):
+        distribution_capacity("-1", hard_nav="10")
 
 
 def test_balanced_journal_passes() -> None:
