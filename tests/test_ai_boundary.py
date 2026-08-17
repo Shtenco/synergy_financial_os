@@ -15,11 +15,30 @@ from sinergy_financial_os import (
     ValuationPolicy,
     ValuationRule,
     capture_financial_snapshot_v2,
+    requirement_registry_digest,
     review_ai_policy_proposal,
 )
 
 
 NOW = datetime(2026, 8, 17, 12, 0, tzinfo=UTC)
+
+
+def _requirement_registry() -> dict:
+    return {
+        "schema": "sinergy.requirement-registry/v1",
+        "as_of": "2026-08-17",
+        "default_verification_status": "PENDING_RUNNER",
+        "requirements": [
+            {
+                "id": "REQ-FIN-009",
+                "statement": "LCR is computed only after explicit horizon outflows.",
+            },
+            {
+                "id": "REQ-AI-001",
+                "statement": "AI outputs remain proposals only.",
+            },
+        ],
+    }
 
 
 def _snapshot(*, invariant_failures=()):
@@ -76,7 +95,7 @@ def _snapshot(*, invariant_failures=()):
     )
 
 
-def _proposal(snapshot, *, decision="PROPOSE") -> dict:
+def _proposal(snapshot, registry, *, decision="PROPOSE") -> dict:
     actions = []
     mode = None
     refs = []
@@ -85,10 +104,10 @@ def _proposal(snapshot, *, decision="PROPOSE") -> dict:
             {
                 "action_type": "CREDIT_CAP",
                 "target": "productive-credit",
-                "value": "0.20",
+                "value": "0.2",
                 "unit": "ratio",
                 "lower_bound": "0",
-                "upper_bound": "0.30",
+                "upper_bound": "0.3",
                 "reason_code": "HEALTHY_LIQUIDITY",
             }
         ]
@@ -105,6 +124,7 @@ def _proposal(snapshot, *, decision="PROPOSE") -> dict:
         "input_snapshot_digest": snapshot.digest,
         "input_ledger_sequence": snapshot.sequence,
         "input_valuation_policy_digest": snapshot.valuation_policy_digest,
+        "input_requirement_registry_digest": requirement_registry_digest(registry),
         "decision": decision,
         "authorization": "NONE",
         "proposed_policy_mode": mode,
@@ -116,51 +136,75 @@ def _proposal(snapshot, *, decision="PROPOSE") -> dict:
     }
 
 
-def test_exact_current_snapshot_proposal_is_reviewable_not_executable() -> None:
-    snapshot = _snapshot()
-    review = review_ai_policy_proposal(
-        _proposal(snapshot),
+def _review(proposal: dict, snapshot, registry, *, now=None):
+    return review_ai_policy_proposal(
+        proposal,
         snapshot,
-        now=NOW + timedelta(minutes=2),
+        now=now or NOW + timedelta(minutes=2),
+        requirement_registry=registry,
     )
+
+
+def test_exact_current_snapshot_and_constitution_is_reviewable_not_executable() -> None:
+    snapshot = _snapshot()
+    registry = _requirement_registry()
+    review = _review(_proposal(snapshot, registry), snapshot, registry)
     assert review.status == "REVIEWABLE"
     assert review.reviewable is True
+    assert review.requirement_registry_digest == requirement_registry_digest(registry)
     assert review.status not in {"APPROVED", "EXECUTABLE", "AUTHORIZED"}
 
 
 def test_changed_snapshot_digest_makes_proposal_stale() -> None:
     snapshot = _snapshot()
-    proposal = _proposal(snapshot)
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
     proposal["input_snapshot_digest"] = "11" * 32
-    review = review_ai_policy_proposal(
-        proposal,
-        snapshot,
-        now=NOW + timedelta(minutes=2),
-    )
+    review = _review(proposal, snapshot, registry)
     assert review.status == "STALE"
     assert "STALE_INPUT_SNAPSHOT" in review.blockers
 
 
 def test_changed_ledger_sequence_or_valuation_policy_makes_proposal_stale() -> None:
     snapshot = _snapshot()
-    proposal = _proposal(snapshot)
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
     proposal["input_ledger_sequence"] = snapshot.sequence + 1
     proposal["input_valuation_policy_digest"] = "22" * 32
-    review = review_ai_policy_proposal(
-        proposal,
-        snapshot,
-        now=NOW + timedelta(minutes=2),
-    )
+    review = _review(proposal, snapshot, registry)
     assert review.status == "STALE"
     assert "STALE_LEDGER_SEQUENCE" in review.blockers
     assert "STALE_VALUATION_POLICY" in review.blockers
 
 
+def test_changed_requirement_meaning_under_same_ids_makes_proposal_stale() -> None:
+    snapshot = _snapshot()
+    original_registry = _requirement_registry()
+    proposal = _proposal(snapshot, original_registry)
+
+    changed_registry = deepcopy(original_registry)
+    changed_registry["requirements"][0]["statement"] = (
+        "LCR may be approximated from incomplete browser data."
+    )
+    assert {
+        item["id"] for item in original_registry["requirements"]
+    } == {item["id"] for item in changed_registry["requirements"]}
+    assert requirement_registry_digest(original_registry) != requirement_registry_digest(
+        changed_registry
+    )
+
+    review = _review(proposal, snapshot, changed_registry)
+    assert review.status == "STALE"
+    assert "STALE_REQUIREMENT_REGISTRY" in review.blockers
+
+
 def test_expired_proposal_is_stale() -> None:
     snapshot = _snapshot()
-    review = review_ai_policy_proposal(
-        _proposal(snapshot),
+    registry = _requirement_registry()
+    review = _review(
+        _proposal(snapshot, registry),
         snapshot,
+        registry,
         now=NOW + timedelta(hours=1),
     )
     assert review.status == "STALE"
@@ -169,79 +213,101 @@ def test_expired_proposal_is_stale() -> None:
 
 def test_snapshot_invariant_failure_blocks_otherwise_current_proposal() -> None:
     snapshot = _snapshot(invariant_failures=("LCR_1W_BELOW_FLOOR",))
-    review = review_ai_policy_proposal(
-        _proposal(snapshot),
-        snapshot,
-        now=NOW + timedelta(minutes=2),
-    )
+    registry = _requirement_registry()
+    review = _review(_proposal(snapshot, registry), snapshot, registry)
     assert review.status == "BLOCKED"
     assert "CURRENT_SNAPSHOT_INVARIANT:LCR_1W_BELOW_FLOOR" in review.blockers
 
 
-def test_no_action_remains_no_action() -> None:
+def test_no_action_remains_no_action_but_is_still_constitution_bound() -> None:
     snapshot = _snapshot()
-    review = review_ai_policy_proposal(
-        _proposal(snapshot, decision="NO_ACTION"),
+    registry = _requirement_registry()
+    review = _review(
+        _proposal(snapshot, registry, decision="NO_ACTION"),
         snapshot,
-        now=NOW + timedelta(minutes=2),
+        registry,
     )
     assert review.status == "NO_ACTION"
     assert review.reviewable is False
+    assert review.requirement_registry_digest == requirement_registry_digest(registry)
+
+
+def test_unknown_requirement_reference_is_rejected_even_with_current_registry_digest() -> None:
+    snapshot = _snapshot()
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
+    proposal["hard_invariant_refs"] = ["REQ-FAKE-999"]
+    with pytest.raises(AccountingInvariantError, match="unknown hard invariant reference"):
+        _review(proposal, snapshot, registry)
+
+
+def test_duplicate_hard_requirement_references_are_rejected() -> None:
+    snapshot = _snapshot()
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
+    proposal["hard_invariant_refs"] = ["REQ-FIN-009", "REQ-FIN-009"]
+    with pytest.raises(AccountingInvariantError, match="must be unique"):
+        _review(proposal, snapshot, registry)
 
 
 def test_authorization_other_than_none_is_rejected() -> None:
     snapshot = _snapshot()
-    proposal = _proposal(snapshot)
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
     proposal["authorization"] = "EXECUTE"
     with pytest.raises(AccountingInvariantError):
-        review_ai_policy_proposal(
-            proposal,
-            snapshot,
-            now=NOW + timedelta(minutes=2),
-        )
+        _review(proposal, snapshot, registry)
 
 
 def test_action_outside_declared_bounds_is_rejected() -> None:
     snapshot = _snapshot()
-    proposal = _proposal(snapshot)
-    proposal["actions"][0]["value"] = "0.40"
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
+    proposal["actions"][0]["value"] = "0.4"
     with pytest.raises(AccountingInvariantError):
-        review_ai_policy_proposal(
-            proposal,
-            snapshot,
-            now=NOW + timedelta(minutes=2),
-        )
+        _review(proposal, snapshot, registry)
 
 
 @pytest.mark.parametrize("bad", ["NaN", "Infinity", "-Infinity"])
 def test_non_finite_action_values_are_rejected(bad: str) -> None:
     snapshot = _snapshot()
-    proposal = _proposal(snapshot)
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
     proposal["actions"][0]["value"] = bad
     with pytest.raises(AccountingInvariantError):
-        review_ai_policy_proposal(
-            proposal,
-            snapshot,
-            now=NOW + timedelta(minutes=2),
-        )
+        _review(proposal, snapshot, registry)
+
+
+@pytest.mark.parametrize("bad", ["0.20", "00", "-0"])
+def test_noncanonical_action_decimal_text_is_rejected(bad: str) -> None:
+    snapshot = _snapshot()
+    registry = _requirement_registry()
+    proposal = _proposal(snapshot, registry)
+    proposal["actions"][0]["value"] = bad
+    with pytest.raises(AccountingInvariantError, match="canonical decimal"):
+        _review(proposal, snapshot, registry)
 
 
 def test_duplicate_or_invalid_evidence_refs_are_rejected() -> None:
     snapshot = _snapshot()
-    duplicate = _proposal(snapshot)
-    duplicate["evidence_refs"] = ["ef" * 32, "ef" * 32]
-    with pytest.raises(AccountingInvariantError):
-        review_ai_policy_proposal(
-            duplicate,
-            snapshot,
-            now=NOW + timedelta(minutes=2),
-        )
+    registry = _requirement_registry()
 
-    invalid = _proposal(snapshot)
+    duplicate = _proposal(snapshot, registry)
+    duplicate["evidence_refs"] = ["ef" * 32, "ef" * 32]
+    with pytest.raises(AccountingInvariantError, match="unique digests"):
+        _review(duplicate, snapshot, registry)
+
+    invalid = _proposal(snapshot, registry)
     invalid["project_screening_refs"] = ["not-a-digest"]
-    with pytest.raises(AccountingInvariantError):
-        review_ai_policy_proposal(
-            invalid,
-            snapshot,
-            now=NOW + timedelta(minutes=2),
-        )
+    with pytest.raises(AccountingInvariantError, match="64-character hex"):
+        _review(invalid, snapshot, registry)
+
+
+def test_unsafe_or_boolean_ledger_sequence_is_rejected() -> None:
+    snapshot = _snapshot()
+    registry = _requirement_registry()
+    for bad in (True, 9_007_199_254_740_992):
+        proposal = _proposal(snapshot, registry)
+        proposal["input_ledger_sequence"] = bad
+        with pytest.raises(AccountingInvariantError, match="safe integer"):
+            _review(proposal, snapshot, registry)
