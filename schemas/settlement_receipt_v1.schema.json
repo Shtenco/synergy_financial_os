@@ -9,23 +9,39 @@
     "settlement_id",
     "intent_id",
     "provider_id",
-    "asset",
-    "gross_amount",
-    "net_amount",
-    "fee_amount",
+    "source_asset",
+    "source_amount",
+    "target_asset",
+    "target_amount",
+    "fees",
     "status",
     "finality_time",
-    "external_evidence_class"
+    "external_evidence_class",
+    "reconciled"
   ],
   "properties": {
     "schema": {"const": "settlement.receipt/v1"},
     "settlement_id": {"type": "string", "minLength": 1},
     "intent_id": {"type": "string", "minLength": 1},
     "provider_id": {"type": "string", "minLength": 1},
-    "asset": {"type": "string", "minLength": 1},
-    "gross_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "net_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "fee_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "source_asset": {"type": "string", "minLength": 1, "maxLength": 32},
+    "source_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "target_asset": {"type": "string", "minLength": 1, "maxLength": 32},
+    "target_amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "fees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["asset", "amount", "kind"],
+        "properties": {
+          "asset": {"type": "string", "minLength": 1, "maxLength": 32},
+          "amount": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+          "kind": {"type": "string", "minLength": 1},
+          "provider_ref": {"type": ["string", "null"]}
+        }
+      }
+    },
     "status": {"enum": ["PENDING", "SETTLED", "FAILED", "REVERSED"]},
     "finality_time": {"type": ["string", "null"], "format": "date-time"},
     "external_evidence_class": {
@@ -33,7 +49,8 @@
     },
     "external_reference": {"type": ["string", "null"]},
     "evidence_digest": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"},
-    "reconciled": {"type": "boolean", "default": false},
+    "reconciled": {"type": "boolean"},
+    "route_id": {"type": ["string", "null"]},
     "metadata": {"type": "object"}
   }
 }
