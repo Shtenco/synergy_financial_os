@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-HEX64 = re.compile(r"^[0-9a-f]{40}$")
+GIT_SHA1 = re.compile(r"^[0-9a-f]{40}$")
 
 
 def load_json(relative: str) -> dict:
@@ -19,7 +19,7 @@ def test_source_baseline_has_unique_repository_ref_pairs_and_commit_ids() -> Non
         key = (source["repository"], source["ref"])
         assert key not in seen
         seen.add(key)
-        assert HEX64.fullmatch(source["commit"])
+        assert GIT_SHA1.fullmatch(source["commit"])
         assert source["role"]
 
 
