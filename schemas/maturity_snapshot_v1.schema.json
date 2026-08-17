@@ -4,6 +4,13 @@
   "title": "SINERGY MaturitySnapshot v1",
   "type": "object",
   "additionalProperties": false,
+  "$defs": {
+    "nonnegativeDecimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*|0\\.[0-9]*[1-9]|[1-9][0-9]*\\.[0-9]*[1-9])$"
+    },
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
+  },
   "required": [
     "schema",
     "as_of",
@@ -11,15 +18,21 @@
     "currency",
     "total_open_principal",
     "immediately_callable_principal",
-    "buckets"
+    "buckets",
+    "metadata",
+    "digest"
   ],
   "properties": {
     "schema": {"const": "maturity.snapshot/v1"},
     "as_of": {"type": "string", "format": "date-time"},
-    "as_of_week": {"type": "integer", "minimum": 0},
+    "as_of_week": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
     "currency": {"type": "string", "minLength": 3, "maxLength": 16},
-    "total_open_principal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-    "immediately_callable_principal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "total_open_principal": {"$ref": "#/$defs/nonnegativeDecimal"},
+    "immediately_callable_principal": {"$ref": "#/$defs/nonnegativeDecimal"},
     "buckets": {
       "type": "array",
       "minItems": 1,
@@ -31,17 +44,31 @@
           "week",
           "scheduled_unlock",
           "cumulative_unlock",
+          "scheduled_noncallable_unlock",
+          "cumulative_noncallable_unlock",
           "duration_eligible_principal"
         ],
         "properties": {
           "week": {"type": "integer", "minimum": 1, "maximum": 100},
-          "scheduled_unlock": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-          "cumulative_unlock": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
-          "duration_eligible_principal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"}
+          "scheduled_unlock": {"$ref": "#/$defs/nonnegativeDecimal"},
+          "cumulative_unlock": {"$ref": "#/$defs/nonnegativeDecimal"},
+          "scheduled_noncallable_unlock": {"$ref": "#/$defs/nonnegativeDecimal"},
+          "cumulative_noncallable_unlock": {"$ref": "#/$defs/nonnegativeDecimal"},
+          "duration_eligible_principal": {"$ref": "#/$defs/nonnegativeDecimal"}
         }
       }
     },
-    "digest": {"type": ["string", "null"], "pattern": "^[a-fA-F0-9]{64}$"},
-    "metadata": {"type": "object"}
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["horizon_weeks", "liquidity_outflow_rule"],
+      "properties": {
+        "horizon_weeks": {"type": "integer", "minimum": 1, "maximum": 100},
+        "liquidity_outflow_rule": {
+          "const": "immediately_callable_principal + cumulative_noncallable_unlock"
+        }
+      }
+    },
+    "digest": {"$ref": "#/$defs/hex64"}
   }
 }
