@@ -133,8 +133,20 @@ def test_v2_screening_rejects_legacy_numeric_risk_score_float() -> None:
         )
 
 
-def test_v2_digest_changes_when_decimal_text_changes() -> None:
-    first = _v2()
-    second = deepcopy(first)
-    second["risk_score"] = "0.20"
-    assert project_proposal_v2_digest(first) != project_proposal_v2_digest(second)
+@pytest.mark.parametrize(
+    ("path", "bad_value"),
+    [
+        (("risk_score",), "0.20"),
+        (("risk_score",), "-0"),
+        (("requested_funding", 0, "amount"), "070"),
+        (("requested_funding", 0, "amount"), "70.0"),
+    ],
+)
+def test_v2_digest_rejects_noncanonical_equivalent_decimal_text(path, bad_value) -> None:
+    proposal = _v2()
+    target = proposal
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = bad_value
+    with pytest.raises(AccountingInvariantError, match="not canonical decimal text"):
+        project_proposal_v2_digest(proposal)
