@@ -1,20 +1,22 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Mapping
 
+from .canonical_json import canonical_json_digest
 from .core import AccountingInvariantError
+from .numeric import canonical_decimal_text, finite_decimal
 
 
 ZERO = Decimal("0")
+ONE = Decimal("1")
 FEE_ROLES = frozenset(
     {"PROTOCOL_REVENUE", "PROVIDER_COST", "NETWORK_COST", "TAX", "OTHER"}
 )
 AUTO_PNL_SIGNS = {
-    "PROTOCOL_REVENUE": Decimal("1"),
+    "PROTOCOL_REVENUE": ONE,
     "PROVIDER_COST": Decimal("-1"),
     "NETWORK_COST": Decimal("-1"),
     "TAX": ZERO,
@@ -22,10 +24,8 @@ AUTO_PNL_SIGNS = {
 }
 
 
-def _d(value: Decimal | int | str) -> Decimal:
-    if isinstance(value, Decimal):
-        return value
-    return Decimal(str(value))
+def _d(value: Decimal | int | str, field_name: str = "value") -> Decimal:
+    return finite_decimal(value, field_name)
 
 
 def _hex64(value: str, field_name: str) -> str:
@@ -36,22 +36,42 @@ def _hex64(value: str, field_name: str) -> str:
 
 
 def _canonical_digest(payload: Any) -> str:
-    encoded = json.dumps(
-        payload,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-        allow_nan=False,
-    ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return canonical_json_digest(payload)
+
+
+def _require_canonical_nonnegative_decimal(value: Any, field_name: str) -> Decimal:
+    if not isinstance(value, str):
+        raise AccountingInvariantError(f"{field_name} must be a canonical decimal string")
+    amount = _d(value, field_name)
+    if amount < ZERO:
+        raise AccountingInvariantError(f"{field_name} must be non-negative")
+    expected = canonical_decimal_text(amount, field_name)
+    if value != expected:
+        raise AccountingInvariantError(
+            f"{field_name} is not canonical decimal text: expected {expected!r}, got {value!r}"
+        )
+    return amount
+
+
+def _require_timezone_aware_datetime(value: Any, field_name: str) -> datetime:
+    if not isinstance(value, str) or not value.strip():
+        raise AccountingInvariantError(f"{field_name} is required")
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise AccountingInvariantError(f"{field_name} must be ISO-8601 date-time") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise AccountingInvariantError(f"{field_name} must be timezone-aware")
+    return parsed
 
 
 def verify_settlement_receipt_for_accounting(receipt: Mapping[str, Any]) -> str:
-    """Verify minimum finality/evidence conditions for accounting consumption.
+    """Verify finality/evidence/canonical-byte conditions for accounting use.
 
     MetaPay may export pending or merely terminal receipts for operational use.
     Financial OS is stricter: automatic accounting preparation accepts only a
     finalized, reconciled, externally evidence-bound `SETTLED` receipt.
+    Payment principal/notional is still not classified as P&L here.
     """
 
     if receipt.get("schema") != "settlement.receipt/v1":
@@ -60,10 +80,12 @@ def verify_settlement_receipt_for_accounting(receipt: Mapping[str, Any]) -> str:
         raise AccountingInvariantError("accounting bridge accepts only SETTLED receipts")
     if receipt.get("reconciled") is not True:
         raise AccountingInvariantError("settlement must be reconciled before accounting use")
-    if not receipt.get("finality_time"):
-        raise AccountingInvariantError("settled receipt requires finality_time")
+
+    _require_timezone_aware_datetime(receipt.get("finality_time"), "finality_time")
+    _require_canonical_nonnegative_decimal(receipt.get("source_amount"), "source_amount")
     if receipt.get("target_amount") is None:
         raise AccountingInvariantError("settled receipt requires a final target_amount")
+    _require_canonical_nonnegative_decimal(receipt.get("target_amount"), "target_amount")
 
     evidence_digest = receipt.get("evidence_digest")
     if not isinstance(evidence_digest, str):
@@ -75,22 +97,50 @@ def verify_settlement_receipt_for_accounting(receipt: Mapping[str, Any]) -> str:
         raise AccountingInvariantError(
             "accounting settlement requires at least one external evidence class"
         )
+    if len(evidence_classes) != len(set(evidence_classes)):
+        raise AccountingInvariantError("external evidence classes must be unique")
+
+    providers = receipt.get("providers")
+    if not isinstance(providers, list) or any(
+        not isinstance(provider, str) or not provider.strip() for provider in providers
+    ):
+        raise AccountingInvariantError("providers must be an array of non-empty strings")
+    if len(providers) != len(set(providers)):
+        raise AccountingInvariantError("providers must be unique")
+
+    external_references = receipt.get("external_references")
+    if not isinstance(external_references, list) or any(
+        not isinstance(reference, str) or not reference.strip()
+        for reference in external_references
+    ):
+        raise AccountingInvariantError(
+            "external_references must be an array of non-empty strings"
+        )
+    if len(external_references) != len(set(external_references)):
+        raise AccountingInvariantError("external_references must be unique")
 
     fees = receipt.get("fees")
     if not isinstance(fees, list):
         raise AccountingInvariantError("settlement fees must be a list")
-    for fee in fees:
+    for index, fee in enumerate(fees):
         if not isinstance(fee, Mapping):
             raise AccountingInvariantError("settlement fee must be an object")
-        role = str(fee.get("economic_role", "")).upper().strip()
-        if role not in FEE_ROLES:
+        role_raw = fee.get("economic_role")
+        if not isinstance(role_raw, str):
+            raise AccountingInvariantError("settlement fee economic_role is required")
+        role = role_raw.strip()
+        if role != role.upper() or role not in FEE_ROLES:
             raise AccountingInvariantError(f"unsupported settlement fee economic_role: {role}")
-        amount = _d(fee.get("amount", "-1"))
-        if amount < ZERO:
-            raise AccountingInvariantError("settlement fee amount must be non-negative")
+        _require_canonical_nonnegative_decimal(
+            fee.get("amount"),
+            f"fees[{index}].amount",
+        )
         asset = str(fee.get("asset", "")).upper().strip()
         if not asset:
             raise AccountingInvariantError("settlement fee asset is required")
+        kind = str(fee.get("kind", "")).strip()
+        if not kind:
+            raise AccountingInvariantError("settlement fee kind is required")
 
     return _canonical_digest(dict(receipt))
 
@@ -105,7 +155,10 @@ class FeeTranslation:
     def __post_init__(self) -> None:
         source = self.source_asset.upper().strip()
         reporting = self.reporting_currency.upper().strip()
-        rate = _d(self.reporting_units_per_source_unit)
+        rate = _d(
+            self.reporting_units_per_source_unit,
+            "reporting_units_per_source_unit",
+        )
         if not source or not reporting:
             raise AccountingInvariantError("source_asset and reporting_currency are required")
         if rate <= ZERO:
@@ -114,13 +167,12 @@ class FeeTranslation:
             )
         evidence = self.translation_evidence_digest
         if source == reporting:
-            if rate != Decimal("1"):
+            if rate != ONE:
                 raise AccountingInvariantError("same-currency fee translation rate must be 1")
-        else:
-            if evidence is None:
-                raise AccountingInvariantError(
-                    "foreign-currency fee translation requires an evidence digest"
-                )
+        elif evidence is None:
+            raise AccountingInvariantError(
+                "foreign-currency fee translation requires an evidence digest"
+            )
         if evidence is not None:
             evidence = _hex64(evidence, "translation_evidence_digest")
 
@@ -142,6 +194,24 @@ class TranslatedSettlementFee:
     economic_role: str
     provider_ref: str | None
     translation_evidence_digest: str | None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "receipt_digest",
+            _hex64(self.receipt_digest, "receipt_digest"),
+        )
+        object.__setattr__(
+            self,
+            "settlement_evidence_digest",
+            _hex64(self.settlement_evidence_digest, "settlement_evidence_digest"),
+        )
+        source_amount = _d(self.source_amount, "source_amount")
+        reporting_amount = _d(self.reporting_amount, "reporting_amount")
+        if source_amount < ZERO or reporting_amount < ZERO:
+            raise AccountingInvariantError("translated fee amounts must be non-negative")
+        object.__setattr__(self, "source_amount", source_amount)
+        object.__setattr__(self, "reporting_amount", reporting_amount)
 
     @property
     def automatic_pnl_effect(self) -> Decimal:
@@ -182,11 +252,11 @@ def translate_settlement_fees(
     result: list[TranslatedSettlementFee] = []
     for fee in receipt["fees"]:
         asset = str(fee["asset"]).upper().strip()
-        amount = _d(fee["amount"])
+        amount = _require_canonical_nonnegative_decimal(fee["amount"], "fee.amount")
         role = str(fee["economic_role"]).upper().strip()
 
         if asset == reporting:
-            translation = FeeTranslation(asset, reporting, Decimal("1"))
+            translation = FeeTranslation(asset, reporting, ONE)
         else:
             try:
                 translation = translation_map[asset]
@@ -199,6 +269,10 @@ def translate_settlement_fees(
                     f"fee translation does not match {asset}->{reporting}"
                 )
 
+        reporting_amount = _d(
+            amount * translation.reporting_units_per_source_unit,
+            "translated reporting_amount",
+        )
         result.append(
             TranslatedSettlementFee(
                 receipt_digest=receipt_digest,
@@ -206,7 +280,7 @@ def translate_settlement_fees(
                 asset=asset,
                 source_amount=amount,
                 reporting_currency=reporting,
-                reporting_amount=amount * translation.reporting_units_per_source_unit,
+                reporting_amount=reporting_amount,
                 kind=str(fee["kind"]),
                 economic_role=role,
                 provider_ref=fee.get("provider_ref"),
