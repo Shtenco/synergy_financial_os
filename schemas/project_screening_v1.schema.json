@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/project.screening/v1",
+  "title": "SINERGY ProjectScreeningResult v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "nonnegative": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"}
+  },
+  "required": [
+    "schema",
+    "project_id",
+    "proposal_digest",
+    "evidence_bundle_digest",
+    "policy_id",
+    "policy_digest",
+    "translation_set_digest",
+    "reporting_currency",
+    "requested_funding",
+    "private_capital",
+    "first_loss_capital",
+    "private_to_requested_ratio",
+    "first_loss_to_requested_ratio",
+    "evidence_status",
+    "risk_score",
+    "maturity_weeks",
+    "status",
+    "blockers",
+    "digest"
+  ],
+  "properties": {
+    "schema": {"const": "project.screening/v1"},
+    "project_id": {"type": "string", "minLength": 1},
+    "proposal_digest": {"$ref": "#/$defs/hex64"},
+    "evidence_bundle_digest": {
+      "oneOf": [
+        {"$ref": "#/$defs/hex64"},
+        {"type": "null"}
+      ]
+    },
+    "policy_id": {"type": "string", "minLength": 1},
+    "policy_digest": {"$ref": "#/$defs/hex64"},
+    "translation_set_digest": {"$ref": "#/$defs/hex64"},
+    "reporting_currency": {"type": "string", "minLength": 1, "maxLength": 16},
+    "requested_funding": {"$ref": "#/$defs/nonnegative"},
+    "private_capital": {"$ref": "#/$defs/nonnegative"},
+    "first_loss_capital": {"$ref": "#/$defs/nonnegative"},
+    "private_to_requested_ratio": {"$ref": "#/$defs/nonnegative"},
+    "first_loss_to_requested_ratio": {"$ref": "#/$defs/nonnegative"},
+    "evidence_status": {
+      "enum": ["SCENARIO", "MODEL_ESTIMATE", "OBSERVED_OPERATIONAL", "EXTERNALLY_SETTLED", "AUDITED"]
+    },
+    "risk_score": {
+      "oneOf": [
+        {"type": "string", "pattern": "^(0(\\.[0-9]+)?|1(\\.0+)?)$"},
+        {"type": "null"}
+      ]
+    },
+    "maturity_weeks": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["REVIEWABLE", "NO_ACTION"]},
+    "blockers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "digest": {"$ref": "#/$defs/hex64"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "REVIEWABLE"}}},
+      "then": {"properties": {"blockers": {"maxItems": 0}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "NO_ACTION"}}},
+      "then": {"properties": {"blockers": {"minItems": 1}}}
+    }
+  ]
+}
