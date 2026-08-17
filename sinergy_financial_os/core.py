@@ -66,20 +66,63 @@ class FinancialState:
         return self.economic_haircut_assets - self.external_liabilities
 
 
-def distributable_profit(
+def hard_nav_surplus_after_capital(
     previous_hard_nav: Decimal | int | str,
     current_hard_nav: Decimal | int | str,
     net_new_capital: Decimal | int | str,
 ) -> Decimal:
-    """Return realized distributable profit under the canonical HardNAV rule.
+    """Return the signed HardNAV change after removing net new capital.
 
-    New participant/sponsor capital is removed from the period NAV change.
-    Negative results floor at zero for *distribution capacity*; economic losses
-    remain visible in the underlying NAV series and must not be erased.
+    This metric is diagnostic, **not distributable profit**. HardNAV can rise
+    when previously owned non-hard assets become hard assets, for example when
+    performing-loan principal is repaid into cash. Principal hardening is not
+    revenue and must not be distributed merely because this value is positive.
     """
 
-    raw = _d(current_hard_nav) - _d(previous_hard_nav) - _d(net_new_capital)
-    return max(ZERO, raw)
+    return _d(current_hard_nav) - _d(previous_hard_nav) - _d(net_new_capital)
+
+
+def distributable_profit(
+    realized_external_pnl: Decimal | int | str,
+    required_retention: Decimal | int | str = ZERO,
+    loss_carryforward: Decimal | int | str = ZERO,
+) -> Decimal:
+    """Return the realized P&L budget potentially available for distribution.
+
+    The input must come from explicit, externally evidenced P&L classification
+    (revenue/expense/loss accounts), not from gross HardNAV movement. Required
+    retention and prior realized loss carryforward reduce the budget.
+
+    Final authorization should additionally pass `distribution_capacity`, which
+    applies the current solvency/HardNAV buffer.
+    """
+
+    pnl = _d(realized_external_pnl)
+    retention = _d(required_retention)
+    losses = _d(loss_carryforward)
+    if retention < ZERO or losses < ZERO:
+        raise AccountingInvariantError(
+            "required_retention and loss_carryforward must be non-negative"
+        )
+    return max(ZERO, pnl - retention - losses)
+
+
+def distribution_capacity(
+    realized_profit_budget: Decimal | int | str,
+    hard_nav: Decimal | int | str,
+    required_hard_nav_buffer: Decimal | int | str = ZERO,
+) -> Decimal:
+    """Bound a realized-profit budget by the current HardNAV solvency buffer."""
+
+    budget = _d(realized_profit_budget)
+    nav = _d(hard_nav)
+    buffer = _d(required_hard_nav_buffer)
+    if budget < ZERO or buffer < ZERO:
+        raise AccountingInvariantError(
+            "realized_profit_budget and required_hard_nav_buffer must be non-negative"
+        )
+    solvency_headroom = max(ZERO, nav - buffer)
+    return min(budget, solvency_headroom)
 
 
 def ensure_balanced_journal(
