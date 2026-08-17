@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/project.proposal/v2",
+  "title": "SINERGY Productive Project Proposal v2",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "decimal": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$"},
+    "nonnegativeDecimal": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$"},
+    "unitIntervalDecimal": {
+      "type": "string",
+      "pattern": "^(0(\\.[0-9]+)?|1(\\.0+)?)$"
+    },
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset", "amount", "source_ref"],
+      "properties": {
+        "asset": {"type": "string", "minLength": 1},
+        "amount": {"$ref": "#/$defs/nonnegativeDecimal"},
+        "source_ref": {"type": ["string", "null"]}
+      }
+    },
+    "cashFlow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["period", "asset", "amount", "note"],
+      "properties": {
+        "period": {"type": "string", "minLength": 1},
+        "asset": {"type": "string", "minLength": 1},
+        "amount": {"$ref": "#/$defs/decimal"},
+        "note": {"type": ["string", "null"]}
+      }
+    },
+    "fxExposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset", "amount", "direction", "hedged_fraction"],
+      "properties": {
+        "asset": {"type": "string", "minLength": 1},
+        "amount": {"$ref": "#/$defs/nonnegativeDecimal"},
+        "direction": {"enum": ["PAYABLE", "RECEIVABLE"]},
+        "hedged_fraction": {"$ref": "#/$defs/unitIntervalDecimal"}
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "project_id",
+    "jurisdiction",
+    "sector",
+    "capex",
+    "requested_funding",
+    "private_capital",
+    "opex_annual",
+    "maturity_weeks",
+    "expected_cash_flows",
+    "energy_requirement",
+    "labor_requirement",
+    "logistics_requirement",
+    "fx_exposures",
+    "risk_score",
+    "first_loss_capital",
+    "dependencies",
+    "milestones",
+    "evidence_status",
+    "evidence_bundle_digest",
+    "source_vintage",
+    "metadata"
+  ],
+  "properties": {
+    "schema": {"const": "project.proposal/v2"},
+    "project_id": {"type": "string", "minLength": 1},
+    "jurisdiction": {"type": "string", "minLength": 1},
+    "sector": {"type": "string", "minLength": 1},
+    "capex": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/money"}},
+    "requested_funding": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/money"}},
+    "private_capital": {"type": "array", "items": {"$ref": "#/$defs/money"}},
+    "opex_annual": {"type": "array", "items": {"$ref": "#/$defs/money"}},
+    "maturity_weeks": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "expected_cash_flows": {"type": "array", "items": {"$ref": "#/$defs/cashFlow"}},
+    "energy_requirement": {"type": ["string", "null"]},
+    "labor_requirement": {"type": ["string", "null"]},
+    "logistics_requirement": {"type": ["string", "null"]},
+    "fx_exposures": {"type": "array", "items": {"$ref": "#/$defs/fxExposure"}},
+    "risk_score": {
+      "oneOf": [
+        {"$ref": "#/$defs/unitIntervalDecimal"},
+        {"type": "null"}
+      ]
+    },
+    "first_loss_capital": {"type": "array", "items": {"$ref": "#/$defs/money"}},
+    "dependencies": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "milestones": {"type": "array", "items": {"type": "object"}},
+    "evidence_status": {
+      "enum": ["SCENARIO", "MODEL_ESTIMATE", "OBSERVED_OPERATIONAL", "EXTERNALLY_SETTLED", "AUDITED"]
+    },
+    "evidence_bundle_digest": {
+      "oneOf": [
+        {"$ref": "#/$defs/hex64"},
+        {"type": "null"}
+      ]
+    },
+    "source_vintage": {"type": ["string", "null"]},
+    "metadata": {"type": "object"}
+  }
+}
