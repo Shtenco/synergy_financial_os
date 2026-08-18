@@ -1,0 +1,13 @@
+{
+  "schema":"sinergy.schema-registry/v6",
+  "as_of":"2026-08-18",
+  "base_registry":"config/schema_registry_v5.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V6 preserves trace v1-v4 and replaces self-referential in-trace trust finalization with an external commitment over the completed trace.",
+  "supersessions":[
+    {"schema_id":"economic.cycle-trace/v4","new_status":"SUPERSEDED_DRAFT","superseded_by":"economic.cycle-trace/v5","reason":"V5 ends at FinancialSnapshot and requires a separate external commitment, eliminating the potential trace->commitment(trace)->trace hash cycle."}
+  ],
+  "additions":[
+    {"schema_id":"economic.cycle-trace/v5","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Completed causal/accounting graph ends at FinancialSnapshot and must be finalized by a separate external trust commitment. Trace itself cannot execute, post or commit itself."}
+  ]
+}
