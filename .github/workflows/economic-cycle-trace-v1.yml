@@ -8,8 +8,10 @@ on:
       - 'schemas/capital_authorization_v1.schema.json'
       - 'schemas/economic_cycle_trace_v1.schema.json'
       - 'config/schema_registry_v2.json'
+      - 'fixtures/conformance/capital_authorization_v1_canonical.json'
       - 'tests/test_capital_authorization.py'
       - 'tests/test_capital_authorization_schema.py'
+      - 'tests/test_capital_authorization_conformance.py'
       - 'tests/test_economic_cycle_trace.py'
       - 'tests/test_economic_cycle_trace_schema.py'
       - 'tests/test_economic_cycle_schema_registry.py'
@@ -43,6 +45,7 @@ jobs:
           python -m pytest
           tests/test_capital_authorization.py
           tests/test_capital_authorization_schema.py
+          tests/test_capital_authorization_conformance.py
           tests/test_economic_cycle_trace.py
           tests/test_economic_cycle_trace_schema.py
           tests/test_economic_cycle_schema_registry.py
