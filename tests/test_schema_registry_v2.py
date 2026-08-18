@@ -66,6 +66,17 @@ def test_semantic_binding_and_archive_contracts_have_narrow_authority() -> None:
     assert "do not gain current financial" in archive["authority_note"]
 
 
+def test_preserved_financial_rnd_handoff_is_non_authoritative() -> None:
+    by_id = {item["schema_id"]: item for item in _load(V2_PATH)["schemas"]}
+    market = by_id["market.experiment-result/v1"]
+    assert market["schema_authority"] == "Shtenco/ai_financial_system"
+    assert market["producer"] == "Shtenco/ai_financial_system"
+    assert market["consumers"] == ["Shtenco/synergy_financial_os"]
+    note = market["authority_note"].lower()
+    assert "mint" in note and "excluded from pnl" in note
+    assert "only financial os" in note
+
+
 def test_commitment_v2_does_not_claim_financial_authority() -> None:
     by_id = {item["schema_id"]: item for item in _load(V2_PATH)["schemas"]}
     commitment = by_id["commitment.envelope/v2"]
