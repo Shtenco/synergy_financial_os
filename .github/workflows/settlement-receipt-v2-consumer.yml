@@ -1,0 +1,33 @@
+name: settlement-receipt-v2-consumer
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/settlement_receipt_v2.py'
+      - 'schemas/settlement_receipt_v2.schema.json'
+      - 'fixtures/conformance/settlement_receipt_v2_*.json'
+      - 'tests/test_settlement_receipt_v2_consumer.py'
+      - 'docs/SETTLEMENT_RECEIPT_V2_CONSUMER_20260818.md'
+      - '.github/workflows/settlement-receipt-v2-consumer.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: settlement-receipt-v2-consumer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  consumer-v2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest jsonschema
+      - name: Compile receipt consumer
+        run: python -m py_compile sinergy_financial_os/settlement_receipt_v2.py
+      - name: Run receipt consumer regressions
+        run: python -m pytest tests/test_settlement_receipt_v2_consumer.py -q
