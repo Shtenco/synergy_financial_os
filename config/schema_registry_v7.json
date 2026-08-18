@@ -1,0 +1,11 @@
+{
+  "schema":"sinergy.schema-registry/v7",
+  "as_of":"2026-08-18",
+  "base_registry":"config/schema_registry_v6.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V7 preserves all prior snapshot/trace generations and adds a Merkle-sealed accounting close over a contiguous LedgerEvent prefix plus independently verifiable event inclusion proofs.",
+  "additions":[
+    {"schema_id":"accounting.close/v1","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Financial OS sealing artifact binding exact FinancialSnapshot v2 digest to a contiguous ledger prefix Merkle root, sequence span, valuation-policy digest and requirement-registry digest. It cannot execute transactions or recognize revenue itself."},
+    {"schema_id":"ledger.inclusion-proof/v1","status":"DRAFT_DOMAIN_SCHEMA","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergychain","Shtenco/synergy_ai_blockchain","Shtenco/ai_language"],"authority_note":"Provenance-only Merkle proof that one exact LedgerEvent v1 belongs to the ledger root sealed by a specific AccountingClose v1."}
+  ]
+}

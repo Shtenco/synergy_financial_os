@@ -1,0 +1,31 @@
+name: accounting-close-merkle-v1
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/accounting_close_v1.py'
+      - 'schemas/accounting_close_v1.schema.json'
+      - 'schemas/ledger_inclusion_proof_v1.schema.json'
+      - 'config/schema_registry_v7.json'
+      - 'tests/test_accounting_close_v1.py'
+      - 'tests/test_schema_registry_v7.py'
+      - 'docs/ACCOUNTING_CLOSE_MERKLE_V1_20260818.md'
+      - '.github/workflows/accounting-close-merkle-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  accounting-close:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tests
+        run: python -m pip install --upgrade pip pytest jsonschema
+      - name: Compile accounting close
+        run: python -m py_compile sinergy_financial_os/accounting_close_v1.py
+      - name: Run Merkle close and registry regressions
+        run: python -m pytest tests/test_accounting_close_v1.py tests/test_schema_registry_v7.py -q
