@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/revenue.recognition/v2",
+  "title": "SINERGY RevenueRecognition v2",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "decimal": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"}
+  },
+  "required": [
+    "schema","recognition_id","project_id","decision","settlement_receipt_digest",
+    "capital_authorization_digest","project_evidence_digest","counterparty_id",
+    "counterparty_relation","counterparty_evidence_digest","revenue_destination_id",
+    "contract_digest","invoice_digest","invoice_reporting_amount","delivery_evidence_digest",
+    "accounting_policy_digest","settlement_asset","settlement_amount","reporting_currency",
+    "fx_rate_to_reporting","gross_reporting_amount","tax_reporting_amount",
+    "refund_reserve_reporting_amount","recognized_reporting_amount","performance_state",
+    "dispute_state","fx_evidence_digest","recognized_at","blockers","ledger_posting_allowed",
+    "accounting_authority","ledger_posting_authority","ai_authority","digest"
+  ],
+  "properties": {
+    "schema":{"const":"revenue.recognition/v2"},
+    "recognition_id":{"type":"string","minLength":1},
+    "project_id":{"type":"string","minLength":1},
+    "decision":{"enum":["RECOGNIZED","DEFERRED","REJECTED"]},
+    "settlement_receipt_digest":{"$ref":"#/$defs/hex64"},
+    "capital_authorization_digest":{"$ref":"#/$defs/hex64"},
+    "project_evidence_digest":{"$ref":"#/$defs/hex64"},
+    "counterparty_id":{"type":"string","minLength":1},
+    "counterparty_relation":{"enum":["EXTERNAL_NON_RELATED","EXTERNAL_RELATED","INTRA_GROUP","UNKNOWN"]},
+    "counterparty_evidence_digest":{"$ref":"#/$defs/hex64"},
+    "revenue_destination_id":{"type":"string","minLength":1},
+    "contract_digest":{"$ref":"#/$defs/hex64"},
+    "invoice_digest":{"$ref":"#/$defs/hex64"},
+    "invoice_reporting_amount":{"$ref":"#/$defs/decimal"},
+    "delivery_evidence_digest":{"$ref":"#/$defs/hex64"},
+    "accounting_policy_digest":{"$ref":"#/$defs/hex64"},
+    "settlement_asset":{"type":"string","minLength":1},
+    "settlement_amount":{"$ref":"#/$defs/decimal"},
+    "reporting_currency":{"type":"string","minLength":1},
+    "fx_rate_to_reporting":{"$ref":"#/$defs/decimal"},
+    "gross_reporting_amount":{"$ref":"#/$defs/decimal"},
+    "tax_reporting_amount":{"$ref":"#/$defs/decimal"},
+    "refund_reserve_reporting_amount":{"$ref":"#/$defs/decimal"},
+    "recognized_reporting_amount":{"$ref":"#/$defs/decimal"},
+    "performance_state":{"enum":["SATISFIED","PARTIAL","UNSATISFIED"]},
+    "dispute_state":{"enum":["CLEAR","OPEN","CHARGEBACK_PENDING","REFUNDED"]},
+    "fx_evidence_digest":{"oneOf":[{"$ref":"#/$defs/hex64"},{"type":"null"}]},
+    "recognized_at":{"type":"string","pattern":"Z$"},
+    "blockers":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},
+    "ledger_posting_allowed":{"type":"boolean"},
+    "accounting_authority":{"const":"Shtenco/synergy_financial_os"},
+    "ledger_posting_authority":{"const":"SEPARATE_REPORTING_LEDGER_POST"},
+    "ai_authority":{"const":"NONE"},
+    "digest":{"$ref":"#/$defs/hex64"}
+  },
+  "allOf": [
+    {"if":{"properties":{"decision":{"const":"RECOGNIZED"}}},"then":{"properties":{"blockers":{"maxItems":0},"ledger_posting_allowed":{"const":true}}}},
+    {"if":{"properties":{"decision":{"enum":["DEFERRED","REJECTED"]}}},"then":{"properties":{"blockers":{"minItems":1},"ledger_posting_allowed":{"const":false},"recognized_reporting_amount":{"const":"0"}}}}
+  ]
+}
