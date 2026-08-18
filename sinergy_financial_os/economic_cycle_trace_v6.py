@@ -4,6 +4,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any, Iterable, Mapping, Sequence
 
 from .accounting_close_v2 import (
@@ -27,6 +28,7 @@ from .settlement_receipt_v2 import (
 SCHEMA = "economic.cycle-trace/v6"
 TRUST_FINALIZATION = "EXTERNAL_COMMITMENT_REQUIRED"
 HEX = frozenset("0123456789abcdef")
+ZERO = Decimal("0")
 PHASE_CONTRACTS_V6 = (
     ("FUNDING_STATE", "maturity.snapshot/v1", "Shtenco/synergy_matrix_sota"),
     ("PROJECT_PROPOSAL", "project.proposal/v2", "Shtenco/synergy_eurasian"),
@@ -99,6 +101,31 @@ def _digest(payload: Mapping[str, Any]) -> str:
             allow_nan=False,
         ).encode("utf-8")
     ).hexdigest()
+
+
+def _recognition_posting_shape_blockers(
+    event: Mapping[str, Any], recognition: RevenueRecognitionDecisionV2
+) -> set[str]:
+    blockers: set[str] = set()
+    if event.get("reporting_currency") != recognition.reporting_currency:
+        blockers.add("LEDGER_REPORTING_CURRENCY_MISMATCH")
+    lines = event.get("lines")
+    if not isinstance(lines, list):
+        return {"LEDGER_POSTING_SHAPE_INVALID"}
+    debits = [Decimal(line["debit"]) for line in lines if line.get("debit") != "0"]
+    credits = [Decimal(line["credit"]) for line in lines if line.get("credit") != "0"]
+    expected_credits = [recognition.recognized_reporting_amount]
+    if recognition.tax_reporting_amount > ZERO:
+        expected_credits.append(recognition.tax_reporting_amount)
+    if recognition.refund_reserve_reporting_amount > ZERO:
+        expected_credits.append(recognition.refund_reserve_reporting_amount)
+    if len(debits) != 1 or debits[0] != recognition.gross_reporting_amount:
+        blockers.add("LEDGER_GROSS_DEBIT_MISMATCH")
+    if sorted(credits) != sorted(expected_credits):
+        blockers.add("LEDGER_RECOGNITION_CREDIT_COMPONENTS_MISMATCH")
+    if len(lines) != 1 + len(expected_credits):
+        blockers.add("LEDGER_RECOGNITION_LINE_COUNT_MISMATCH")
+    return blockers
 
 
 @dataclass(frozen=True)
@@ -292,6 +319,7 @@ def verify_complete_trace_artifacts_v6(
         blockers.add("LEDGER_EVENT_TYPE_MISMATCH")
     if event.get("evidence_digest") != recognition.digest:
         blockers.add("LEDGER_RECOGNITION_EVIDENCE_MISMATCH")
+    blockers.update(_recognition_posting_shape_blockers(event, recognition))
     event_digest = ledger_event_v2_digest(event)
 
     snapshot = verify_financial_snapshot_v2_payload(financial_snapshot)
