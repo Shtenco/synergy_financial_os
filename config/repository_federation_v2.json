@@ -1,0 +1,172 @@
+{
+  "schema": "sinergy.repository-federation/v2",
+  "as_of": "2026-08-18",
+  "evolution_policy": "ADDITIVE_ONLY",
+  "legacy_preservation_required": true,
+  "new_repository_policy": "CREATE_ONLY_FOR_NEW_EXCLUSIVE_DOMAIN_AUTHORITY",
+  "authority_domains": {
+    "accounting": "Shtenco/synergy_financial_os",
+    "nav_and_profit_recognition": "Shtenco/synergy_financial_os",
+    "risk_and_monetary_constitution": "Shtenco/synergy_financial_os",
+    "capital_allocation_screening": "Shtenco/synergy_financial_os",
+    "household_maturity_schedule": "Shtenco/synergy_matrix_sota",
+    "payment_routing": "Shtenco/synergy_pay_system",
+    "settlement_and_reconciliation": "Shtenco/synergy_pay_system",
+    "real_economy_project_model": "Shtenco/synergy_eurasian",
+    "trust_commitments": "Shtenco/synergy_ai_blockchain",
+    "ai_policy_proposals": "Shtenco/agi_olga",
+    "requirement_semantics": "Shtenco/ai_language",
+    "lossless_archive_and_compression": "Shtenco/ai_compress",
+    "engineering_orchestration": "Shtenco/ai_coder",
+    "portal_control_plane": "Shtenco/synergychain",
+    "public_static_surface": "Shtenco/synergychain.github.io"
+  },
+  "repositories": [
+    {
+      "name": "Shtenco/synergy_financial_os",
+      "class": "CANONICAL_ROOT",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Canonical accounting, NAV, risk, monetary constitution, screening and federation schemas."
+    },
+    {
+      "name": "Shtenco/ai_financial_system",
+      "class": "FINANCIAL_RND_ARCHIVE",
+      "preserve_history": true,
+      "authoritative": false,
+      "live_execution_authority": false,
+      "notes": "Preserved AMM/QE/QT/MEV/HardNAV/Financial-OS research lineage and falsification evidence."
+    },
+    {
+      "name": "Shtenco/synergy_matrix_sota",
+      "class": "DOMAIN_ROOT",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Household savings, independent tranches, maturity schedule and mutual-credit funding eligibility."
+    },
+    {
+      "name": "Shtenco/usds",
+      "class": "MONETARY_RND",
+      "preserve_history": true,
+      "authoritative": false,
+      "live_execution_authority": false,
+      "notes": "Elastic/credit-money research; mint mechanics alone are not external profit."
+    },
+    {
+      "name": "Shtenco/synergy_eurasian",
+      "class": "DOMAIN_ROOT",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "EIIOM, real-economy constraints, productive project proposals and evidence semantics."
+    },
+    {
+      "name": "Shtenco/synergy_pay_system",
+      "class": "EXECUTION_CORE",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": "DENY_BY_DEFAULT_UNTIL_READINESS",
+      "notes": "MetaPay routing, settlement state, provider capacity, compliance and reconciliation."
+    },
+    {
+      "name": "Shtenco/synergychain",
+      "class": "CONTROL_PLANE",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Portal/OGAS control plane. Consumes signed state and must not recalculate accounting truth."
+    },
+    {
+      "name": "Shtenco/synergy_ai_blockchain",
+      "class": "TRUST_LAYER",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Typed commitments, proofs and provenance. Commitment is not financial authorization."
+    },
+    {
+      "name": "Shtenco/agi_olga",
+      "class": "INTELLIGENCE_RND",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "NEXUS/OLGA intelligence and policy proposals only; deterministic authorities remain external."
+    },
+    {
+      "name": "Shtenco/ai_language",
+      "class": "ENGINEERING_SEMANTICS",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Requirement semantics, deterministic IR and requirement-to-code/test/evidence traceability."
+    },
+    {
+      "name": "Shtenco/ai_compress",
+      "class": "MEMORY_ARCHIVE",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Lossless archive/compression/MDL memory technology; compression scores are not financial truth."
+    },
+    {
+      "name": "Shtenco/ai_coder",
+      "class": "ENGINEERING_ORCHESTRATION",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Architect/implement/review/test orchestration; no autonomous financial merge/deploy authority."
+    },
+    {
+      "name": "Shtenco/cashero",
+      "class": "IMMUTABLE_LEGACY",
+      "preserve_history": true,
+      "authoritative": false,
+      "live_execution_authority": false,
+      "notes": "Cyclic-liquidity/adaptive-supply lineage; historical internal marks are not canonical profit."
+    },
+    {
+      "name": "Shtenco/synergychain.github.io",
+      "class": "PUBLIC_SURFACE_AND_TEMP_COMPUTE",
+      "preserve_history": true,
+      "authoritative": true,
+      "live_execution_authority": false,
+      "notes": "Public static surface authority only. Temporary build/training/CI branches remain non-financial and non-accounting."
+    },
+    {
+      "name": "Shtenco/shtencoauantai.github.io",
+      "class": "HISTORICAL_PUBLIC_SURFACE",
+      "preserve_history": true,
+      "authoritative": false,
+      "live_execution_authority": false,
+      "notes": "Historical Quant/AI presentation and CI provenance. Not current Financial OS authority."
+    },
+    {
+      "name": "Shtenco/shtenco.github.io",
+      "class": "HISTORICAL_PUBLIC_SURFACE",
+      "preserve_history": true,
+      "authoritative": false,
+      "live_execution_authority": false,
+      "notes": "Historical personal ML/quant/blockchain research provenance."
+    }
+  ],
+  "non_authoritative_modes": [
+    "TEMPORARY_CI",
+    "TEMPORARY_COMPUTE",
+    "BENCHMARK_ARTIFACT",
+    "PUBLIC_SHOWCASE",
+    "MODEL_TRAINING",
+    "FORK_SIMULATION",
+    "LEGACY_REPLAY"
+  ],
+  "hard_rules": [
+    "A_PUBLIC_SURFACE_MUST_NOT_BECOME_ACCOUNTING_AUTHORITY",
+    "A_RESEARCH_RESULT_MUST_NOT_BE_PROMOTED_TO_PRODUCTION_BY_REPOSITORY_LOCATION",
+    "TEMPORARY_COMPUTE_DOES_NOT_CREATE_DOMAIN_AUTHORITY",
+    "NO_REPOSITORY_MAY_REINTERPRET_INTERNAL_MARKS_AS_EXTERNAL_PROFIT",
+    "AI_PROPOSAL_AUTHORITY_IS_NOT_EXECUTION_AUTHORITY",
+    "TRUST_COMMITMENT_IS_NOT_FINANCIAL_AUTHORIZATION",
+    "LEGACY_FILES_ARE_NOT_DELETED_TO_SIMPLIFY_THE_CURRENT_ARCHITECTURE"
+  ]
+}
