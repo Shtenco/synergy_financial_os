@@ -21,7 +21,10 @@ from sinergy_financial_os.authorized_revenue_reversal_v1 import (
     RevenueReversalAccountsV1,
     post_authorized_revenue_reversal_v1,
 )
-from sinergy_financial_os.ledger_event_v2 import export_reporting_entry_as_ledger_event_v2
+from sinergy_financial_os.ledger_event_v2 import (
+    export_reporting_entry_as_ledger_event_v2,
+    ledger_event_v2_digest,
+)
 from sinergy_financial_os.reporting import (
     AccountClass,
     ConsolidationClass,
@@ -38,6 +41,7 @@ from sinergy_financial_os.revenue_recognition_v2 import RevenueRecognitionDecisi
 from sinergy_financial_os.revenue_reversal_v1 import (
     RevenueReversalAuthorizationV1,
     RevenueReversalV1Error,
+    verify_revenue_reversal_context_v1,
 )
 from sinergy_financial_os.snapshot import LiquidityHorizonState, capture_financial_snapshot_v2
 from sinergy_financial_os.valuation import ValuationPolicy, ValuationRule
@@ -69,16 +73,16 @@ def horizons(amount): return (LiquidityHorizonState(1,amount,Decimal('0')),Liqui
 def original_closed_period():
  ledger=book();rec=recognition();entry=post_recognized_external_revenue_v2(ledger,rec,RevenuePostingAccountsV2('cash','revenue','tax','refund'),event_id='revenue-event-001');event=export_reporting_entry_as_ledger_event_v2(entry,ledger,effective_at=rec.recognized_at,evidence_class='PROJECT')
  snap=capture_financial_snapshot_v2(ledger,policy(),as_of=dt('2026-08-19T11:00:00Z'),accounting_perimeter='SINERGY_CONSOLIDATED',liquidity_horizons=horizons(Decimal('125')),required_hard_nav_buffer=Decimal('0'),policy_mode='NORMAL')
- close=build_accounting_close_v2([event],snap.to_dict(),close_id='close-period-n',closed_at=dt('2026-08-19T11:11:00Z'),requirement_registry_digest=REQ)
+ close=build_accounting_close_v2([event],snap.to_dict(),close_id='close-period-n',closed_at=dt('2026-08-19T11:01:00Z'),requirement_registry_digest=REQ)
  proof=build_ledger_inclusion_proof_v2([event],snap.to_dict(),event_index=0,close=close)
- period=AccountingPeriodV1('period-n',dt('2026-08-19T00:00:00Z'),dt('2026-08-19T11:10:00Z'),'SINERGY_CONSOLIDATED','USDC',POLICY,REQ)
- period_close=build_period_close_v1(period,close,closed_at=dt('2026-08-19T11:12:00Z'))
+ period=AccountingPeriodV1('period-n',dt('2026-08-19T00:00:00Z'),dt('2026-08-19T11:00:00Z'),'SINERGY_CONSOLIDATED','USDC',POLICY,REQ)
+ period_close=build_period_close_v1(period,close,financial_snapshot=snap.to_dict(),sealed_ledger_events=[event],closed_at=dt('2026-08-19T11:02:00Z'))
  return ledger,rec,entry,event,snap,close,proof,period,period_close
 
 def successor_and_auth(ctx):
  ledger,rec,entry,event,snap,close,proof,period,period_close=ctx
- successor=AccountingPeriodV1('period-n-plus-1',dt('2026-08-19T11:10:00Z'),dt('2026-08-19T13:00:00Z'),'SINERGY_CONSOLIDATED','USDC',POLICY,REQ,period_close.digest)
- auth=RevenueReversalAuthorizationV1('reversal-auth-001',successor.period_id,rec.project_id,'CHARGEBACK',period_close.digest,close.digest,rec.digest,__import__('sinergy_financial_os.ledger_event_v2',fromlist=['ledger_event_v2_digest']).ledger_event_v2_digest(event),entry.digest,'99'*32,'aa'*32,POLICY,'MULTISIG_GOVERNANCE',dt('2026-08-19T11:20:00Z'),dt('2026-08-19T11:30:00Z'))
+ successor=AccountingPeriodV1('period-n-plus-1',dt('2026-08-19T11:00:00Z'),dt('2026-08-19T13:00:00Z'),'SINERGY_CONSOLIDATED','USDC',POLICY,REQ,period_close.digest)
+ auth=RevenueReversalAuthorizationV1('reversal-auth-001',successor.period_id,rec.project_id,'CHARGEBACK',period_close.digest,close.digest,rec.digest,ledger_event_v2_digest(event),entry.digest,'99'*32,'aa'*32,POLICY,'MULTISIG_GOVERNANCE',dt('2026-08-19T11:20:00Z'),dt('2026-08-19T11:30:00Z'))
  return successor,auth
 
 def reversal_accounts(): return RevenueReversalAccountsV1('cash','revenue','tax','refund')
@@ -92,8 +96,16 @@ def test_full_closed_period_chargeback_is_new_entry_and_zeroes_hardnav_without_m
  snap2=capture_financial_snapshot_v2(ledger,policy(),as_of=dt('2026-08-19T13:00:00Z'),accounting_perimeter='SINERGY_CONSOLIDATED',liquidity_horizons=horizons(Decimal('0')),previous_snapshot=snap1,required_hard_nav_buffer=Decimal('0'),policy_mode='DEFENSE')
  assert snap1.hard_nav==Decimal('118');assert snap2.hard_nav==Decimal('0');assert snap2.realized_external_revenue==Decimal('0');assert snap2.realized_external_pnl==Decimal('-118');assert snap2.period_profit_budget==Decimal('0');assert snap2.distribution_capacity==Decimal('0')
  close2=build_accounting_close_v2([original_event,reversal_event],snap2.to_dict(),close_id='close-period-n-plus-1',closed_at=dt('2026-08-19T13:01:00Z'),requirement_registry_digest=REQ);assert verify_accounting_close_v2([original_event,reversal_event],snap2.to_dict(),close2)
- period_close2=build_period_close_v1(successor,close2,adjustment_authorization_digests=(auth.digest,),closed_at=dt('2026-08-19T13:02:00Z'))
+ period_close2=build_period_close_v1(successor,close2,financial_snapshot=snap2.to_dict(),sealed_ledger_events=[original_event,reversal_event],adjustment_authorization_digests=(auth.digest,),closed_at=dt('2026-08-19T13:02:00Z'))
  assert period_close2.previous_period_close_digest==period_close1.digest;assert period_close2.accounting_close_digest==close2.digest;assert period_close2.adjustment_authorization_digests==(auth.digest,);assert period_close1.digest!=period_close2.digest
+
+def test_period_close_refuses_to_claim_adjustment_not_in_sealed_prefix():
+ ctx=original_closed_period();ledger,rec,_,event,snap1,close1,proof,_,period_close1=ctx;successor,auth=successor_and_auth(ctx)
+ # No reversal is posted. A new close over the old prefix cannot claim the authorization.
+ snap2=capture_financial_snapshot_v2(ledger,policy(),as_of=dt('2026-08-19T13:00:00Z'),accounting_perimeter='SINERGY_CONSOLIDATED',liquidity_horizons=horizons(Decimal('125')),previous_snapshot=snap1,required_hard_nav_buffer=Decimal('0'),policy_mode='NORMAL')
+ close2=build_accounting_close_v2([event],snap2.to_dict(),close_id='close-without-adjustment',closed_at=dt('2026-08-19T13:01:00Z'),requirement_registry_digest=REQ)
+ with pytest.raises(Exception,match='adjustment authorization must appear exactly once'):
+  build_period_close_v1(successor,close2,financial_snapshot=snap2.to_dict(),sealed_ledger_events=[event],adjustment_authorization_digests=(auth.digest,),closed_at=dt('2026-08-19T13:02:00Z'))
 
 def test_reversal_replay_is_blocked_after_first_full_reversal():
  ctx=original_closed_period();ledger,rec,_,event,_,close,proof,_,period_close=ctx;successor,auth=successor_and_auth(ctx)
@@ -110,8 +122,7 @@ def test_full_reversal_refuses_to_guess_when_tax_component_was_already_consumed(
 def test_v1_rejects_partial_scope_and_non_successor_period():
  ctx=original_closed_period();_,rec,entry,event,_,close,_,_,period_close=ctx;successor,auth=successor_and_auth(ctx)
  with pytest.raises(RevenueReversalV1Error,match='full reversal only'):
-  RevenueReversalAuthorizationV1('partial',successor.period_id,rec.project_id,'REFUND',period_close.digest,close.digest,rec.digest,__import__('sinergy_financial_os.ledger_event_v2',fromlist=['ledger_event_v2_digest']).ledger_event_v2_digest(event),entry.digest,'99'*32,'aa'*32,POLICY,'HUMAN_COMMITTEE',dt('2026-08-19T11:20:00Z'),dt('2026-08-19T11:30:00Z'),adjustment_scope='PARTIAL')
- wrong=AccountingPeriodV1('wrong',dt('2026-08-19T11:10:00Z'),dt('2026-08-19T13:00:00Z'),'SINERGY_CONSOLIDATED','USDC',POLICY,REQ,'cc'*32)
- from sinergy_financial_os.revenue_reversal_v1 import verify_revenue_reversal_context_v1
+  RevenueReversalAuthorizationV1('partial',successor.period_id,rec.project_id,'REFUND',period_close.digest,close.digest,rec.digest,ledger_event_v2_digest(event),entry.digest,'99'*32,'aa'*32,POLICY,'HUMAN_COMMITTEE',dt('2026-08-19T11:20:00Z'),dt('2026-08-19T11:30:00Z'),adjustment_scope='PARTIAL')
+ wrong=AccountingPeriodV1('wrong',dt('2026-08-19T11:00:00Z'),dt('2026-08-19T13:00:00Z'),'SINERGY_CONSOLIDATED','USDC',POLICY,REQ,'cc'*32)
  with pytest.raises(RevenueReversalV1Error,match='directly succeed'):
   verify_revenue_reversal_context_v1(auth,wrong,period_close,close,rec,event,ctx[6])
