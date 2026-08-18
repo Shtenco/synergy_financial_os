@@ -9,11 +9,13 @@ on:
       - 'schemas/economic_cycle_trace_v1.schema.json'
       - 'config/schema_registry_v2.json'
       - 'fixtures/conformance/capital_authorization_v1_canonical.json'
+      - 'fixtures/conformance/economic_cycle_trace_v1_complete.json'
       - 'tests/test_capital_authorization.py'
       - 'tests/test_capital_authorization_schema.py'
       - 'tests/test_capital_authorization_conformance.py'
       - 'tests/test_economic_cycle_trace.py'
       - 'tests/test_economic_cycle_trace_schema.py'
+      - 'tests/test_economic_cycle_trace_conformance.py'
       - 'tests/test_economic_cycle_schema_registry.py'
       - 'docs/CAPITAL_AUTHORIZATION_AND_ECONOMIC_CYCLE_TRACE_V1_20260818.md'
       - '.github/workflows/economic-cycle-trace-v1.yml'
@@ -48,5 +50,6 @@ jobs:
           tests/test_capital_authorization_conformance.py
           tests/test_economic_cycle_trace.py
           tests/test_economic_cycle_trace_schema.py
+          tests/test_economic_cycle_trace_conformance.py
           tests/test_economic_cycle_schema_registry.py
           -q
