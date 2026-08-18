@@ -1,0 +1,29 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.system/schemas/accounting.close/v2",
+  "title":"SINERGY AccountingClose v2",
+  "type":"object",
+  "additionalProperties":false,
+  "$defs":{"hex64":{"type":"string","pattern":"^[a-fA-F0-9]{64}$"}},
+  "required":["schema","close_id","snapshot_schema","financial_snapshot_digest","snapshot_sequence","snapshot_ledger_digest","snapshot_ledger_last_entry_digest","account_registry_digest","ledger_event_schema","ledger_root","event_count","closed_at","valuation_policy_digest","requirement_registry_digest","authority","profit_recognition","execution_authority","digest"],
+  "properties":{
+    "schema":{"const":"accounting.close/v2"},
+    "close_id":{"type":"string","minLength":1},
+    "snapshot_schema":{"const":"financial.snapshot/v2"},
+    "financial_snapshot_digest":{"$ref":"#/$defs/hex64"},
+    "snapshot_sequence":{"type":"integer","minimum":1,"maximum":9007199254740991},
+    "snapshot_ledger_digest":{"$ref":"#/$defs/hex64"},
+    "snapshot_ledger_last_entry_digest":{"$ref":"#/$defs/hex64"},
+    "account_registry_digest":{"$ref":"#/$defs/hex64"},
+    "ledger_event_schema":{"const":"ledger.event/v2"},
+    "ledger_root":{"$ref":"#/$defs/hex64"},
+    "event_count":{"type":"integer","minimum":1,"maximum":9007199254740991},
+    "closed_at":{"type":"string","pattern":"Z$"},
+    "valuation_policy_digest":{"$ref":"#/$defs/hex64"},
+    "requirement_registry_digest":{"$ref":"#/$defs/hex64"},
+    "authority":{"const":"FINANCIAL_OS_ACCOUNTING_CLOSE"},
+    "profit_recognition":{"const":"REFERENCE_ONLY"},
+    "execution_authority":{"const":"NONE"},
+    "digest":{"$ref":"#/$defs/hex64"}
+  }
+}
