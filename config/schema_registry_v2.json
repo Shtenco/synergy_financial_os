@@ -134,6 +134,24 @@
       "authority_note": "Maximum automatic verdict is REVIEWABLE; no merge, deploy or financial execution authority."
     },
     {
+      "schema_id": "requirement.binding/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/ai_language",
+      "producer": "Shtenco/ai_language",
+      "consumers": ["Shtenco/ai_coder", "Shtenco/synergy_financial_os"],
+      "superseded_by": null,
+      "authority_note": "Binding proves REQ references belong to one exact requirement-registry version; it does not review code or authorize merge/deploy."
+    },
+    {
+      "schema_id": "archive.manifest/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/ai_compress",
+      "producer": "Shtenco/ai_compress",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/ai_language"],
+      "superseded_by": null,
+      "authority_note": "Archive manifest preserves exact source provenance only; archived artifacts do not gain current financial, model or execution authority."
+    },
+    {
       "schema_id": "usds.experiment-result/v1",
       "status": "DRAFT_DOMAIN_SCHEMA",
       "schema_authority": "Shtenco/usds",
