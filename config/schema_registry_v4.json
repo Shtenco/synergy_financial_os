@@ -1,0 +1,47 @@
+{
+  "schema": "sinergy.schema-registry/v4",
+  "as_of": "2026-08-18",
+  "base_registry": "config/schema_registry_v3.json",
+  "evolution_policy": "APPEND_ONLY_OVERLAY",
+  "policy": "V4 preserves V3 and records the settlement-receipt/causal-trace evolution without rewriting prior generations.",
+  "supersessions": [
+    {
+      "schema_id": "settlement.receipt/v1",
+      "new_status": "SUPERSEDED_DRAFT",
+      "superseded_by": "settlement.receipt/v2",
+      "reason": "V2 binds exact PaymentIntent causal fields, CapitalAuthorization v2, project lineage and a deterministic receipt digest."
+    },
+    {
+      "schema_id": "economic.cycle-trace/v2",
+      "new_status": "SUPERSEDED_DRAFT",
+      "superseded_by": "economic.cycle-trace/v3",
+      "reason": "V3 requires settlement.receipt/v2 and verifies cross-object screening/authorization/funding/evidence/revenue arrows."
+    }
+  ],
+  "additions": [
+    {
+      "schema_id": "settlement.receipt/v2",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_pay_system",
+      "producer": "Shtenco/synergy_pay_system",
+      "consumers": [
+        "Shtenco/synergy_financial_os",
+        "Shtenco/synergy_ai_blockchain",
+        "Shtenco/synergychain"
+      ],
+      "authority_note": "MetaPay settlement evidence only. Funding receipts bind CapitalAuthorization v2 and exact PaymentIntent economics; project revenue receipts also bind ProjectEvidence v1. Receipt creation does not recognize profit."
+    },
+    {
+      "schema_id": "economic.cycle-trace/v3",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": [
+        "Shtenco/synergychain",
+        "Shtenco/synergy_ai_blockchain",
+        "Shtenco/ai_language"
+      ],
+      "authority_note": "Provenance-only causal graph. It verifies object-to-object digest/time/lineage arrows using settlement.receipt/v2 but still cannot execute transactions or recognize profit."
+    }
+  ]
+}
