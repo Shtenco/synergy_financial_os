@@ -1,0 +1,31 @@
+name: noncircular-trace-v5
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/economic_cycle_trace_v5.py'
+      - 'schemas/economic_cycle_trace_v5.schema.json'
+      - 'fixtures/conformance/economic_cycle_trace_v5_complete.json'
+      - 'config/schema_registry_v6.json'
+      - 'tests/test_economic_cycle_trace_v5.py'
+      - 'tests/test_schema_registry_v6.py'
+      - 'docs/NONCIRCULAR_ECONOMIC_CYCLE_TRACE_V5_20260818.md'
+      - '.github/workflows/noncircular-trace-v5.yml'
+  workflow_dispatch:
+
+jobs:
+  trace-v5:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tests
+        run: python -m pip install --upgrade pip pytest jsonschema
+      - name: Compile trace v5
+        run: python -m py_compile sinergy_financial_os/economic_cycle_trace_v5.py
+      - name: Run non-circular trace regressions
+        run: python -m pytest tests/test_economic_cycle_trace_v5.py tests/test_schema_registry_v6.py -q
