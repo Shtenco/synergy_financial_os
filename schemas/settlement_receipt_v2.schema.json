@@ -11,41 +11,142 @@
       "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
     }
   },
-  "required": ["schema","settlement_id","intent_id","payer_id","payee_id","providers","source_asset","source_amount","target_asset","target_amount","fees","status","finality_time","external_evidence_classes","external_references","settlement_evidence_digest","reconciled","route_id","causal_binding","authority","settlement_authority","accounting_authority","profit_recognition","execution_authority","receipt_digest"],
+  "required": [
+    "schema",
+    "settlement_id",
+    "intent_id",
+    "payer_id",
+    "payee_id",
+    "providers",
+    "source_asset",
+    "source_amount",
+    "target_asset",
+    "target_amount",
+    "fees",
+    "status",
+    "finality_time",
+    "external_evidence_classes",
+    "external_references",
+    "settlement_evidence_digest",
+    "reconciled",
+    "route_id",
+    "causal_binding",
+    "authority",
+    "settlement_authority",
+    "accounting_authority",
+    "profit_recognition",
+    "execution_authority",
+    "receipt_digest"
+  ],
   "properties": {
     "schema": {"const": "settlement.receipt/v2"},
     "settlement_id": {"type": "string", "minLength": 1},
     "intent_id": {"type": "string", "minLength": 1},
     "payer_id": {"type": "string", "minLength": 1},
     "payee_id": {"type": "string", "minLength": 1},
-    "providers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "providers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
     "source_asset": {"type": "string", "minLength": 1, "maxLength": 32},
     "source_amount": {"$ref": "#/$defs/nonnegativeDecimal"},
     "target_asset": {"type": "string", "minLength": 1, "maxLength": 32},
-    "target_amount": {"oneOf": [{"$ref": "#/$defs/nonnegativeDecimal"}, {"type": "null"}]},
-    "fees": {"type": "array"},
+    "target_amount": {
+      "oneOf": [{"$ref": "#/$defs/nonnegativeDecimal"}, {"type": "null"}]
+    },
+    "fees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["asset", "amount", "kind", "economic_role", "provider_ref"],
+        "properties": {
+          "asset": {"type": "string", "minLength": 1, "maxLength": 32},
+          "amount": {"$ref": "#/$defs/nonnegativeDecimal"},
+          "kind": {"type": "string", "minLength": 1},
+          "economic_role": {
+            "enum": ["PROTOCOL_REVENUE", "PROVIDER_COST", "NETWORK_COST", "TAX", "OTHER"]
+          },
+          "provider_ref": {"type": ["string", "null"]}
+        }
+      }
+    },
     "status": {"enum": ["PENDING", "SETTLED", "FAILED", "REVERSED"]},
-    "finality_time": {"oneOf": [{"type": "string", "pattern": "Z$"}, {"type": "null"}]},
-    "external_evidence_classes": {"type": "array", "uniqueItems": true},
-    "external_references": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "finality_time": {
+      "oneOf": [
+        {"type": "string", "pattern": "Z$"},
+        {"type": "null"}
+      ]
+    },
+    "external_evidence_classes": {
+      "type": "array",
+      "items": {
+        "enum": ["BANK", "PSP", "CEX_FILL", "DEX_RECEIPT", "BLOCKCHAIN_FINALITY", "CBDC", "MERCHANT", "OTHER"]
+      },
+      "uniqueItems": true
+    },
+    "external_references": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
     "settlement_evidence_digest": {"$ref": "#/$defs/hex64"},
     "reconciled": {"type": "boolean"},
     "route_id": {"type": ["string", "null"]},
     "causal_binding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["flow_kind","project_id","payment_purpose","intent_idempotency_key","intent_binding_digest","capital_authorization_schema","capital_authorization_digest","project_evidence_schema","project_evidence_digest"],
+      "required": [
+        "flow_kind",
+        "project_id",
+        "payment_purpose",
+        "intent_idempotency_key",
+        "intent_binding_digest",
+        "capital_authorization_schema",
+        "capital_authorization_digest",
+        "project_evidence_schema",
+        "project_evidence_digest"
+      ],
       "properties": {
         "flow_kind": {"enum": ["PRODUCTIVE_CAPITAL_FUNDING", "PROJECT_REVENUE"]},
         "project_id": {"type": "string", "minLength": 1},
-        "payment_purpose": {"enum": ["productive_capital_funding", "productive_project_revenue"]},
+        "payment_purpose": {
+          "enum": ["productive_capital_funding", "productive_project_revenue"]
+        },
         "intent_idempotency_key": {"type": "string", "minLength": 8, "maxLength": 128},
         "intent_binding_digest": {"$ref": "#/$defs/hex64"},
         "capital_authorization_schema": {"const": "capital.authorization/v2"},
         "capital_authorization_digest": {"$ref": "#/$defs/hex64"},
-        "project_evidence_schema": {"oneOf": [{"const": "project.evidence/v1"}, {"type": "null"}]},
-        "project_evidence_digest": {"oneOf": [{"$ref": "#/$defs/hex64"}, {"type": "null"}]}
-      }
+        "project_evidence_schema": {
+          "oneOf": [{"const": "project.evidence/v1"}, {"type": "null"}]
+        },
+        "project_evidence_digest": {
+          "oneOf": [{"$ref": "#/$defs/hex64"}, {"type": "null"}]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"flow_kind": {"const": "PRODUCTIVE_CAPITAL_FUNDING"}}},
+          "then": {
+            "properties": {
+              "payment_purpose": {"const": "productive_capital_funding"},
+              "project_evidence_schema": {"type": "null"},
+              "project_evidence_digest": {"type": "null"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"flow_kind": {"const": "PROJECT_REVENUE"}}},
+          "then": {
+            "properties": {
+              "payment_purpose": {"const": "productive_project_revenue"},
+              "project_evidence_schema": {"const": "project.evidence/v1"},
+              "project_evidence_digest": {"$ref": "#/$defs/hex64"}
+            }
+          }
+        }
+      ]
     },
     "authority": {"const": "SETTLEMENT_EVIDENCE_ONLY"},
     "settlement_authority": {"const": "Shtenco/synergy_pay_system"},
@@ -53,5 +154,16 @@
     "profit_recognition": {"const": "NOT_PERFORMED"},
     "execution_authority": {"const": "NONE"},
     "receipt_digest": {"$ref": "#/$defs/hex64"}
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "SETTLED"}}},
+      "then": {
+        "properties": {
+          "reconciled": {"const": true},
+          "finality_time": {"type": "string", "pattern": "Z$"}
+        }
+      }
+    }
+  ]
 }
