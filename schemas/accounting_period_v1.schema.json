@@ -1,0 +1,11 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.system/schemas/accounting.period/v1",
+  "title":"SINERGY AccountingPeriod v1",
+  "type":"object","additionalProperties":false,
+  "$defs":{"hex64":{"type":"string","pattern":"^[a-fA-F0-9]{64}$"}},
+  "required":["schema","period_id","starts_at","ends_at","accounting_perimeter","reporting_currency","accounting_policy_digest","requirement_registry_digest","opening_period_close_digest","authority","execution_authority","digest"],
+  "properties":{
+    "schema":{"const":"accounting.period/v1"},"period_id":{"type":"string","minLength":1},"starts_at":{"type":"string","pattern":"Z$"},"ends_at":{"type":"string","pattern":"Z$"},"accounting_perimeter":{"type":"string","minLength":1},"reporting_currency":{"type":"string","minLength":1,"maxLength":16},"accounting_policy_digest":{"$ref":"#/$defs/hex64"},"requirement_registry_digest":{"$ref":"#/$defs/hex64"},"opening_period_close_digest":{"oneOf":[{"$ref":"#/$defs/hex64"},{"type":"null"}]},"authority":{"const":"PERIOD_DEFINITION_ONLY"},"execution_authority":{"const":"NONE"},"digest":{"$ref":"#/$defs/hex64"}
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schema":"sinergy.schema-registry/v9",
+  "as_of":"2026-08-19",
+  "base_registry":"config/schema_registry_v8.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V9 adds immutable accounting-period chaining and one fail-closed FULL_ONLY closed-period revenue reversal path. Snapshot v2, ReportingLedger, LedgerEvent v2, AccountingClose v2 and Trace v6 remain unchanged.",
+  "supersessions":[],
+  "additions":[
+    {"schema_id":"accounting.period/v1","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_financial_os","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Non-executing period definition binding exact time interval, perimeter, reporting currency, accounting policy, requirement registry and opening PeriodClose."},
+    {"schema_id":"accounting.period-close/v1","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Immutable reporting-period seal over one verified AccountingClose v2 and FinancialSnapshot boundary. Every declared adjustment authorization must appear exactly once as sealed LedgerEvent evidence."},
+    {"schema_id":"revenue.reversal-authorization/v1","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_financial_os","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Human/multisig FULL_ONLY closed-period refund/chargeback/cancellation authorization. It binds original PeriodClose, AccountingClose, RevenueRecognition, LedgerEvent and ReportingEntry; AI authority is NONE and posting is separate."}
+  ]
+}
