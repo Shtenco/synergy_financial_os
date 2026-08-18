@@ -4,9 +4,13 @@ import hashlib
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping, Sequence
 
-from .accounting_close_v2 import AccountingCloseV2
+from .accounting_close_v2 import (
+    AccountingCloseV2,
+    verify_accounting_close_v2,
+    verify_financial_snapshot_v2_payload,
+)
 from .core import AccountingInvariantError
 
 
@@ -38,6 +42,17 @@ def _utc(value: datetime, field_name: str) -> datetime:
     if not isinstance(value, datetime) or value.tzinfo is None or value.utcoffset() is None:
         raise AccountingPeriodV1Error(f"{field_name} must be timezone-aware datetime")
     return value.astimezone(UTC)
+
+
+def _utc_text(value: Any, field_name: str) -> datetime:
+    text = _text(value, field_name)
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise AccountingPeriodV1Error(f"{field_name} is invalid") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise AccountingPeriodV1Error(f"{field_name} must be timezone-aware")
+    return parsed.astimezone(UTC)
 
 
 def _digest(payload: dict[str, Any]) -> str:
@@ -165,7 +180,14 @@ class AccountingPeriodCloseV1:
                     nullable=True,
                 ),
             )
-        adjustments = tuple(sorted({_hex64(item, "adjustment_authorization_digest") for item in self.adjustment_authorization_digests}))
+        adjustments = tuple(
+            sorted(
+                {
+                    _hex64(item, "adjustment_authorization_digest")
+                    for item in self.adjustment_authorization_digests
+                }
+            )
+        )
         object.__setattr__(self, "adjustment_authorization_digests", adjustments)
         object.__setattr__(self, "closed_at", _utc(self.closed_at, "closed_at"))
 
@@ -195,6 +217,8 @@ def build_period_close_v1(
     period: AccountingPeriodV1,
     accounting_close: AccountingCloseV2,
     *,
+    financial_snapshot: Mapping[str, Any],
+    sealed_ledger_events: Sequence[Mapping[str, Any]],
     adjustment_authorization_digests: Iterable[str] = (),
     closed_at: datetime,
 ) -> AccountingPeriodCloseV1:
@@ -203,14 +227,47 @@ def build_period_close_v1(
         raise AccountingPeriodV1Error("period cannot close before its end")
     if accounting_close.closed_at > close_time:
         raise AccountingPeriodV1Error("period close cannot precede AccountingClose")
+    snapshot = verify_financial_snapshot_v2_payload(financial_snapshot)
+    if _utc_text(snapshot["as_of"], "snapshot.as_of") != period.ends_at:
+        raise AccountingPeriodV1Error("period ends_at must equal FinancialSnapshot as_of")
+    if snapshot.get("accounting_perimeter") != period.accounting_perimeter:
+        raise AccountingPeriodV1Error("period accounting perimeter mismatch")
+    if snapshot.get("reporting_currency") != period.reporting_currency:
+        raise AccountingPeriodV1Error("period reporting currency mismatch")
     if accounting_close.requirement_registry_digest != period.requirement_registry_digest:
         raise AccountingPeriodV1Error("period/AccountingClose requirement registry mismatch")
+    verify_accounting_close_v2(sealed_ledger_events, snapshot, accounting_close)
+
+    adjustments = tuple(
+        sorted(
+            {
+                _hex64(item, "adjustment_authorization_digest")
+                for item in adjustment_authorization_digests
+            }
+        )
+    )
+    evidence_counts = {digest: 0 for digest in adjustments}
+    for event in sealed_ledger_events:
+        evidence = event.get("evidence_digest")
+        if isinstance(evidence, str):
+            normalized = evidence.lower()
+            if normalized in evidence_counts:
+                evidence_counts[normalized] += 1
+    missing_or_replayed = tuple(
+        sorted(digest for digest, count in evidence_counts.items() if count != 1)
+    )
+    if missing_or_replayed:
+        raise AccountingPeriodV1Error(
+            "each adjustment authorization must appear exactly once in sealed ledger prefix: "
+            + ",".join(missing_or_replayed)
+        )
+
     return AccountingPeriodCloseV1(
         period_id=period.period_id,
         accounting_period_digest=period.digest,
         accounting_close_digest=accounting_close.digest,
         financial_snapshot_digest=accounting_close.financial_snapshot_digest,
         previous_period_close_digest=period.opening_period_close_digest,
-        adjustment_authorization_digests=tuple(adjustment_authorization_digests),
+        adjustment_authorization_digests=adjustments,
         closed_at=close_time,
     )
