@@ -126,3 +126,25 @@ def test_snapshot_sequence_is_safe_integer() -> None:
         _authorization(financial_snapshot_sequence=True)
     with pytest.raises(AccountingInvariantError):
         _authorization(financial_snapshot_sequence=9_007_199_254_740_992)
+
+
+def test_current_snapshot_sequence_is_also_validated_before_comparison() -> None:
+    auth = _authorization(financial_snapshot_sequence=1)
+    common = {
+        "current_financial_snapshot_digest": "bb" * 32,
+        "current_valuation_policy_digest": "cc" * 32,
+        "current_requirement_registry_digest": "dd" * 32,
+        "now": NOW + timedelta(minutes=30),
+    }
+    with pytest.raises(AccountingInvariantError):
+        verify_authorization_context(
+            auth,
+            current_financial_snapshot_sequence=True,
+            **common,
+        )
+    with pytest.raises(AccountingInvariantError):
+        verify_authorization_context(
+            auth,
+            current_financial_snapshot_sequence=9_007_199_254_740_992,
+            **common,
+        )
