@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/capital.authorization/v1",
+  "title": "SINERGY CapitalAuthorization v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "hex64": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "canonical_nonnegative_decimal": {"type": "string", "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"}
+  },
+  "required": [
+    "schema", "authorization_id", "project_id", "decision", "decision_authority",
+    "funding_asset", "approved_amount", "screening_digest", "financial_snapshot_digest",
+    "financial_snapshot_sequence", "valuation_policy_digest", "requirement_registry_digest",
+    "decision_evidence_digest", "notes_digest", "decided_at", "expires_at",
+    "execution_authority", "ai_authority", "digest"
+  ],
+  "properties": {
+    "schema": {"const": "capital.authorization/v1"},
+    "authorization_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["APPROVED", "REJECTED"]},
+    "decision_authority": {"enum": ["HUMAN_COMMITTEE", "MULTISIG_GOVERNANCE"]},
+    "funding_asset": {"type": "string", "minLength": 1, "maxLength": 16},
+    "approved_amount": {"$ref": "#/$defs/canonical_nonnegative_decimal"},
+    "screening_digest": {"$ref": "#/$defs/hex64"},
+    "financial_snapshot_digest": {"$ref": "#/$defs/hex64"},
+    "financial_snapshot_sequence": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "valuation_policy_digest": {"$ref": "#/$defs/hex64"},
+    "requirement_registry_digest": {"$ref": "#/$defs/hex64"},
+    "decision_evidence_digest": {"$ref": "#/$defs/hex64"},
+    "notes_digest": {
+      "oneOf": [{"$ref": "#/$defs/hex64"}, {"type": "null"}]
+    },
+    "decided_at": {"type": "string", "pattern": "Z$"},
+    "expires_at": {"type": "string", "pattern": "Z$"},
+    "execution_authority": {"const": "SEPARATE_METAPAY_HANDOFF"},
+    "ai_authority": {"const": "NONE"},
+    "digest": {"$ref": "#/$defs/hex64"}
+  }
+}
