@@ -1,0 +1,21 @@
+{
+  "schema": "capital.authorization/v1",
+  "authorization_id": "auth-funding-001",
+  "project_id": "project-001",
+  "decision": "APPROVED",
+  "decision_authority": "HUMAN_COMMITTEE",
+  "funding_asset": "USDC",
+  "approved_amount": "1000",
+  "screening_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "financial_snapshot_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "financial_snapshot_sequence": 42,
+  "valuation_policy_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "requirement_registry_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "decision_evidence_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "notes_digest": null,
+  "decided_at": "2026-08-18T19:00:00Z",
+  "expires_at": "2026-08-18T21:00:00Z",
+  "execution_authority": "SEPARATE_METAPAY_HANDOFF",
+  "ai_authority": "NONE",
+  "digest": "1bf53290d288e2117ce9c339227669673658eed2c95d72dc2657236b11ae2140"
+}
