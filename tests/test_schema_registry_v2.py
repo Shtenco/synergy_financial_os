@@ -50,6 +50,22 @@ def test_new_engineering_and_usds_contracts_have_correct_authorities() -> None:
     assert "only Financial OS" in usds["authority_note"]
 
 
+def test_semantic_binding_and_archive_contracts_have_narrow_authority() -> None:
+    by_id = {item["schema_id"]: item for item in _load(V2_PATH)["schemas"]}
+    binding = by_id["requirement.binding/v1"]
+    archive = by_id["archive.manifest/v1"]
+    assert binding["schema_authority"] == "Shtenco/ai_language"
+    assert binding["producer"] == "Shtenco/ai_language"
+    assert set(binding["consumers"]) == {
+        "Shtenco/ai_coder",
+        "Shtenco/synergy_financial_os",
+    }
+    assert "does not review code" in binding["authority_note"]
+    assert archive["schema_authority"] == "Shtenco/ai_compress"
+    assert archive["producer"] == "Shtenco/ai_compress"
+    assert "do not gain current financial" in archive["authority_note"]
+
+
 def test_commitment_v2_does_not_claim_financial_authority() -> None:
     by_id = {item["schema_id"]: item for item in _load(V2_PATH)["schemas"]}
     commitment = by_id["commitment.envelope/v2"]
