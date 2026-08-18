@@ -1,0 +1,24 @@
+{
+  "schema": "ledger.event/v1",
+  "event_id": "revenue-event-001",
+  "sequence": 1,
+  "event_type": "EXTERNAL_REVENUE",
+  "effective_at": "2026-08-19T10:30:00Z",
+  "lines": [
+    {"account":"cash","currency":"USDC","debit":"125","credit":"0"},
+    {"account":"revenue","currency":"USDC","debit":"0","credit":"118"},
+    {"account":"tax","currency":"USDC","debit":"0","credit":"5"},
+    {"account":"refund","currency":"USDC","debit":"0","credit":"2"}
+  ],
+  "evidence_class": "PROJECT",
+  "external_reference": "revrec-001",
+  "evidence_digest": "422f66737f129a3b714c16a1212287dc0ccf243efa51c4ce1a7eb65cd56fbfa3",
+  "metadata": {
+    "accounting_policy_digest": "5555555555555555555555555555555555555555555555555555555555555555",
+    "capital_authorization_digest": "1e814153a18850865543e08b498b60d9bce80dbd34bfb2f4c378f3fe502fe89f",
+    "project_evidence_digest": "6666666666666666666666666666666666666666666666666666666666666666",
+    "project_id": "project-001",
+    "revenue_recognition_schema": "revenue.recognition/v2",
+    "settlement_receipt_digest": "cd3a1886789eb431dde2b06feb4236bcf0f5d6f97f327de9204ec437fb8222e8"
+  }
+}
