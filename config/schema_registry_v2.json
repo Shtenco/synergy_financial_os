@@ -159,6 +159,15 @@
       "consumers": ["Shtenco/synergy_financial_os"],
       "superseded_by": null,
       "authority_note": "USDS can report an evidence-bound external PnL candidate; only Financial OS may recognize consolidated profit."
+    },
+    {
+      "schema_id": "market.experiment-result/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/ai_financial_system",
+      "producer": "Shtenco/ai_financial_system",
+      "consumers": ["Shtenco/synergy_financial_os"],
+      "superseded_by": null,
+      "authority_note": "Financial R&D can report evidence-bound external revenue/cost candidates; mint, flash principal, internal marks and self-token marks are excluded from PnL, and only Financial OS may recognize consolidated profit."
     }
   ]
 }
