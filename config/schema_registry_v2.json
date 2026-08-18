@@ -68,6 +68,24 @@
       "superseded_by": null
     },
     {
+      "schema_id": "capital.authorization/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergy_pay_system", "Shtenco/synergychain", "Shtenco/synergy_ai_blockchain"],
+      "superseded_by": null,
+      "authority_note": "Capital authorization is a separate human-committee/multisig decision record bound to current financial state. AI cannot authorize and the record itself cannot execute payment; execution requires a separate MetaPay handoff."
+    },
+    {
+      "schema_id": "economic.cycle-trace/v1",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergychain", "Shtenco/synergy_ai_blockchain", "Shtenco/ai_language"],
+      "superseded_by": null,
+      "authority_note": "Trace proves a strict causal prefix of cross-repository facts only. It cannot execute transactions or recognize profit."
+    },
+    {
       "schema_id": "household.tranche/v1",
       "status": "DRAFT_DOMAIN_SCHEMA",
       "schema_authority": "Shtenco/synergy_matrix_sota",
@@ -90,6 +108,15 @@
       "producer": "Shtenco/synergy_eurasian",
       "consumers": ["Shtenco/synergy_financial_os", "Shtenco/agi_olga", "Shtenco/synergy_ai_blockchain"],
       "superseded_by": null
+    },
+    {
+      "schema_id": "project.evidence/v1",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/synergy_eurasian",
+      "producer": "Shtenco/synergy_eurasian",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/synergy_ai_blockchain"],
+      "superseded_by": null,
+      "authority_note": "Evidence bundle records observed/settled/audited project facts; hash integrity does not replace semantic evidence-class/finality validation."
     },
     {
       "schema_id": "ai.policy-proposal/v1",
