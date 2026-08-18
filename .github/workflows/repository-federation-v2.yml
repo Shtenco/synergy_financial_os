@@ -1,0 +1,29 @@
+name: repository-federation-v2
+
+on:
+  pull_request:
+    paths:
+      - 'config/repository_federation_v2.json'
+      - 'tests/test_repository_federation_v2.py'
+      - 'docs/REPOSITORY_FEDERATION_GOVERNANCE_V2_20260818.md'
+      - '.github/workflows/repository-federation-v2.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: repository-federation-v2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Validate federation ownership contract
+        run: python -m pytest tests/test_repository_federation_v2.py -q
