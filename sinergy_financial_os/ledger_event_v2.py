@@ -4,16 +4,18 @@ import hashlib
 import json
 import re
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any, Mapping
 
 from .core import AccountingInvariantError
-from .reporting import ReportingEntry, ReportingLedger
+from .reporting import FlowType, ReportingEntry, ReportingLedger
 
 
 SCHEMA = "ledger.event/v2"
 HEX64 = re.compile(r"^[a-fA-F0-9]{64}$")
 DECIMAL = re.compile(r"^(0|[1-9][0-9]*)(\.[0-9]*[1-9])?$")
 MAX_SAFE_JSON_INTEGER = 9_007_199_254_740_991
+FLOW_TYPES = frozenset(item.value for item in FlowType)
 EVIDENCE_CLASSES = frozenset(
     {
         "INTERNAL",
@@ -118,8 +120,8 @@ def _reconstructed_reporting_entry(payload: Mapping[str, Any]) -> dict[str, Any]
         raise LedgerEventV2Error("ledger event requires at least two lines")
     reporting_currency = _text(payload.get("reporting_currency"), "reporting_currency").upper()
     entry_lines: list[dict[str, str]] = []
-    debit_total_positive = False
-    credit_total_positive = False
+    debit_total = Decimal("0")
+    credit_total = Decimal("0")
     for index, raw in enumerate(lines):
         if not isinstance(raw, Mapping):
             raise LedgerEventV2Error(f"lines[{index}] must be an object")
@@ -132,16 +134,21 @@ def _reconstructed_reporting_entry(payload: Mapping[str, Any]) -> dict[str, Any]
         credit_positive = credit != "0"
         if debit_positive == credit_positive:
             raise LedgerEventV2Error("each line must contain exactly one positive debit or credit")
-        debit_total_positive |= debit_positive
-        credit_total_positive |= credit_positive
+        debit_total += Decimal(debit)
+        credit_total += Decimal(credit)
         entry_lines.append({"account_id": account, "debit": debit, "credit": credit})
-    if not debit_total_positive or not credit_total_positive:
-        raise LedgerEventV2Error("ledger event must contain both debit and credit sides")
+    if debit_total <= 0 or debit_total != credit_total:
+        raise LedgerEventV2Error(
+            f"ledger event must be balanced: debits={debit_total} credits={credit_total}"
+        )
+    flow_type = _text(payload.get("event_type"), "event_type")
+    if flow_type not in FLOW_TYPES:
+        raise LedgerEventV2Error(f"unsupported event_type: {flow_type}")
     return {
         "sequence": _safe_sequence(payload.get("sequence")),
         "event_id": _text(payload.get("event_id"), "event_id"),
         "reference": _text(payload.get("external_reference"), "external_reference"),
-        "flow_type": _text(payload.get("event_type"), "event_type"),
+        "flow_type": flow_type,
         "lines": entry_lines,
         "previous_entry_digest": _hex64(
             payload.get("previous_reporting_entry_digest"),
