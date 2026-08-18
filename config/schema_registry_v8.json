@@ -1,0 +1,19 @@
+{
+  "schema": "sinergy.schema-registry/v8",
+  "as_of": "2026-08-19",
+  "base_registry": "config/schema_registry_v7.json",
+  "evolution_policy": "APPEND_ONLY_OVERLAY",
+  "policy": "V8 preserves every prior ledger/close/proof/trace generation. It promotes a cross-object accounting bridge from exact ReportingEntry bytes through LedgerEvent v2, genesis-based AccountingClose v2, LedgerInclusionProof v2 and non-circular EconomicCycleTrace v6.",
+  "supersessions": [
+    {"schema_id":"ledger.event/v1","new_status":"SUPERSEDED_DRAFT","superseded_by":"ledger.event/v2","reason":"V2 carries and independently reconstructs the exact ReportingEntry digest chain."},
+    {"schema_id":"accounting.close/v1","new_status":"SUPERSEDED_DRAFT","superseded_by":"accounting.close/v2","reason":"V2 seals a strict sequence-1 ledger prefix and requires the last ReportingEntry digest to equal FinancialSnapshot v2 ledger_last_entry_digest."},
+    {"schema_id":"ledger.inclusion-proof/v1","new_status":"SUPERSEDED_DRAFT","superseded_by":"ledger.inclusion-proof/v2","reason":"V2 binds both LedgerEvent v2 bytes and the underlying ReportingEntry digest to one AccountingClose v2 root."},
+    {"schema_id":"economic.cycle-trace/v5","new_status":"SUPERSEDED_DRAFT","superseded_by":"economic.cycle-trace/v6","reason":"V6 adds mandatory AccountingClose v2 and LedgerInclusionProof v2 phases while retaining external non-circular trust finalization."}
+  ],
+  "additions": [
+    {"schema_id":"ledger.event/v2","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Audit projection of one validated ReportingEntry. It exposes previous/current ReportingEntry digests and remains non-authorizing."},
+    {"schema_id":"accounting.close/v2","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Financial OS close over a strict genesis-based LedgerEvent v2 prefix. It binds FinancialSnapshot v2 digest, ledger digest, last ReportingEntry digest, account registry, valuation policy and requirement registry to one Merkle root."},
+    {"schema_id":"ledger.inclusion-proof/v2","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Provenance-only proof that one exact LedgerEvent v2 and its underlying ReportingEntry digest belong to one AccountingClose v2 root."},
+    {"schema_id":"economic.cycle-trace/v6","status":"DRAFT_CANONICAL_CANDIDATE","schema_authority":"Shtenco/synergy_financial_os","producer":"Shtenco/synergy_financial_os","consumers":["Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],"authority_note":"Twelve-phase non-circular causal/accounting graph through RevenueRecognition v2, LedgerEvent v2, FinancialSnapshot v2, AccountingClose v2 and LedgerInclusionProof v2. External trust commitment remains a separate finalization step."}
+  ]
+}

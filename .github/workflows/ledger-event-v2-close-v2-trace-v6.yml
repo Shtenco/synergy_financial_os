@@ -1,0 +1,55 @@
+name: ledger-event-v2-close-v2-trace-v6
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/ledger_event_v2.py'
+      - 'sinergy_financial_os/accounting_close_v2.py'
+      - 'sinergy_financial_os/economic_cycle_trace_v6.py'
+      - 'schemas/ledger_event_v2.schema.json'
+      - 'schemas/accounting_close_v2.schema.json'
+      - 'schemas/ledger_inclusion_proof_v2.schema.json'
+      - 'schemas/economic_cycle_trace_v6.schema.json'
+      - 'fixtures/conformance/ledger_event_v2_recognized_revenue.json'
+      - 'fixtures/conformance/financial_snapshot_v2_cycle_003.json'
+      - 'fixtures/conformance/accounting_close_v2_cycle_003.json'
+      - 'fixtures/conformance/ledger_inclusion_proof_v2_cycle_003.json'
+      - 'fixtures/conformance/economic_cycle_trace_v6_complete.json'
+      - 'config/schema_registry_v8.json'
+      - 'tests/test_ledger_event_v2_accounting_close_v2.py'
+      - 'tests/test_economic_cycle_trace_v6.py'
+      - 'tests/test_trace_v6_conformance.py'
+      - 'tests/test_schema_registry_v8.py'
+      - '.github/workflows/ledger-event-v2-close-v2-trace-v6.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ledger-event-v2-close-v2-trace-v6-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  accounting-bridge-v6:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest jsonschema
+      - name: Compile new generation
+        run: >-
+          python -m py_compile
+          sinergy_financial_os/ledger_event_v2.py
+          sinergy_financial_os/accounting_close_v2.py
+          sinergy_financial_os/economic_cycle_trace_v6.py
+      - name: Run accounting bridge regressions
+        run: >-
+          python -m pytest
+          tests/test_ledger_event_v2_accounting_close_v2.py
+          tests/test_economic_cycle_trace_v6.py
+          tests/test_trace_v6_conformance.py
+          tests/test_schema_registry_v8.py
+          -q
