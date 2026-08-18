@@ -1,0 +1,33 @@
+name: capital-authorization-v2
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/capital_authorization_v2.py'
+      - 'schemas/capital_authorization_v2.schema.json'
+      - 'fixtures/conformance/capital_authorization_v2_canonical.json'
+      - 'tests/test_capital_authorization_v2.py'
+      - 'docs/CAPITAL_AUTHORIZATION_V2_20260818.md'
+      - '.github/workflows/capital-authorization-v2.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: capital-authorization-v2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  authorization-v2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Compile v2 authorization
+        run: python -m py_compile sinergy_financial_os/capital_authorization_v2.py
+      - name: Run v2 regressions
+        run: python -m pytest tests/test_capital_authorization_v2.py -q
