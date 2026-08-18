@@ -4,9 +4,15 @@ on:
   pull_request:
     paths:
       - 'sinergy_financial_os/settlement_receipt_v2.py'
+      - 'sinergy_financial_os/economic_cycle_trace_v3.py'
       - 'schemas/settlement_receipt_v2.schema.json'
+      - 'schemas/economic_cycle_trace_v3.schema.json'
       - 'fixtures/conformance/settlement_receipt_v2_*.json'
+      - 'fixtures/conformance/economic_cycle_trace_v3_complete.json'
+      - 'config/schema_registry_v4.json'
       - 'tests/test_settlement_receipt_v2_consumer.py'
+      - 'tests/test_economic_cycle_trace_v3.py'
+      - 'tests/test_schema_registry_v4.py'
       - 'docs/SETTLEMENT_RECEIPT_V2_CONSUMER_20260818.md'
       - '.github/workflows/settlement-receipt-v2-consumer.yml'
   workflow_dispatch:
@@ -27,7 +33,15 @@ jobs:
           python-version: '3.12'
       - name: Install test dependencies
         run: python -m pip install --upgrade pip pytest jsonschema
-      - name: Compile receipt consumer
-        run: python -m py_compile sinergy_financial_os/settlement_receipt_v2.py
-      - name: Run receipt consumer regressions
-        run: python -m pytest tests/test_settlement_receipt_v2_consumer.py -q
+      - name: Compile receipt and trace consumers
+        run: >-
+          python -m py_compile
+          sinergy_financial_os/settlement_receipt_v2.py
+          sinergy_financial_os/economic_cycle_trace_v3.py
+      - name: Run receipt and causal-graph regressions
+        run: >-
+          python -m pytest
+          tests/test_settlement_receipt_v2_consumer.py
+          tests/test_economic_cycle_trace_v3.py
+          tests/test_schema_registry_v4.py
+          -q
