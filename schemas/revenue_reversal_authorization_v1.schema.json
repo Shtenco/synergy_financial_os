@@ -1,0 +1,11 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.system/schemas/revenue.reversal-authorization/v1",
+  "title":"SINERGY RevenueReversalAuthorization v1",
+  "type":"object","additionalProperties":false,
+  "$defs":{"hex64":{"type":"string","pattern":"^[a-fA-F0-9]{64}$"}},
+  "required":["schema","authorization_id","target_period_id","project_id","reason","adjustment_scope","original_period_close_digest","original_accounting_close_digest","original_revenue_recognition_digest","original_ledger_event_digest","original_reporting_entry_digest","external_evidence_digest","decision_evidence_digest","accounting_policy_digest","decision_authority","decided_at","effective_at","posting_authority","ai_authority","digest"],
+  "properties":{
+    "schema":{"const":"revenue.reversal-authorization/v1"},"authorization_id":{"type":"string","minLength":1},"target_period_id":{"type":"string","minLength":1},"project_id":{"type":"string","minLength":1},"reason":{"enum":["REFUND","CHARGEBACK","CANCELLATION"]},"adjustment_scope":{"const":"FULL_ONLY"},"original_period_close_digest":{"$ref":"#/$defs/hex64"},"original_accounting_close_digest":{"$ref":"#/$defs/hex64"},"original_revenue_recognition_digest":{"$ref":"#/$defs/hex64"},"original_ledger_event_digest":{"$ref":"#/$defs/hex64"},"original_reporting_entry_digest":{"$ref":"#/$defs/hex64"},"external_evidence_digest":{"$ref":"#/$defs/hex64"},"decision_evidence_digest":{"$ref":"#/$defs/hex64"},"accounting_policy_digest":{"$ref":"#/$defs/hex64"},"decision_authority":{"enum":["HUMAN_COMMITTEE","MULTISIG_GOVERNANCE"]},"decided_at":{"type":"string","pattern":"Z$"},"effective_at":{"type":"string","pattern":"Z$"},"posting_authority":{"const":"SEPARATE_REVERSAL_POSTING"},"ai_authority":{"const":"NONE"},"digest":{"$ref":"#/$defs/hex64"}
+  }
+}
