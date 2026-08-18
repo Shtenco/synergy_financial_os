@@ -1,0 +1,15 @@
+{
+  "schema": "ledger.inclusion-proof/v2",
+  "close_digest": "aa880abd2c32fd4ef6a6360e46ea802f224d91e66f3154f5ae175f60796d6617",
+  "ledger_root": "5eda2173d5f523d73f0f18d84301538a5dcab8e3c8fe15b128b261482a68590d",
+  "event_digest": "6711f4bc972b8c36f8866ba747c6458cf3165deaf5e1e66c0209f89edf9b2776",
+  "reporting_entry_digest": "f38f6ce7c8a23bea46b95681b21aa490af7b8b1797252ec6645f76c2c3eb6086",
+  "event_id": "revenue-event-001",
+  "event_sequence": 1,
+  "leaf_index": 0,
+  "event_count": 1,
+  "siblings": [],
+  "authority": "PROVENANCE_ONLY",
+  "execution_authority": "NONE",
+  "digest": "111f446397399b9a4213226e7924dbc7964a4de1711431ac07f895333ed910cf"
+}
