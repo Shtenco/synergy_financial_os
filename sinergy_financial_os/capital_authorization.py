@@ -61,6 +61,19 @@ def _time(value: datetime, field_name: str) -> datetime:
     return value.astimezone(UTC)
 
 
+def _safe_sequence(value: int, field_name: str) -> int:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or value < 0
+        or value > MAX_SAFE_JSON_INTEGER
+    ):
+        raise AccountingInvariantError(
+            f"{field_name} must be a non-negative cross-language safe integer"
+        )
+    return value
+
+
 def _canonical_digest(payload: dict[str, Any]) -> str:
     encoded = json.dumps(
         payload,
@@ -117,15 +130,9 @@ class CapitalAuthorization:
             )
         if self.ai_authority != "NONE":
             raise AccountingInvariantError("AI cannot be capital authorization authority")
-        if (
-            isinstance(self.financial_snapshot_sequence, bool)
-            or not isinstance(self.financial_snapshot_sequence, int)
-            or self.financial_snapshot_sequence < 0
-            or self.financial_snapshot_sequence > MAX_SAFE_JSON_INTEGER
-        ):
-            raise AccountingInvariantError(
-                "financial_snapshot_sequence must be a non-negative safe integer"
-            )
+        sequence = _safe_sequence(
+            self.financial_snapshot_sequence, "financial_snapshot_sequence"
+        )
         decided = _time(self.decided_at, "decided_at")
         expires = _time(self.expires_at, "expires_at")
         if expires <= decided:
@@ -137,6 +144,7 @@ class CapitalAuthorization:
         object.__setattr__(self, "decision_authority", authority)
         object.__setattr__(self, "funding_asset", asset)
         object.__setattr__(self, "approved_amount", amount)
+        object.__setattr__(self, "financial_snapshot_sequence", sequence)
         object.__setattr__(self, "screening_digest", _hex64(self.screening_digest, "screening_digest"))
         object.__setattr__(
             self,
@@ -212,6 +220,9 @@ def verify_authorization_context(
 ) -> tuple[bool, tuple[str, ...]]:
     """Optimistic-concurrency check before a separate MetaPay handoff."""
 
+    current_sequence = _safe_sequence(
+        current_financial_snapshot_sequence, "current_financial_snapshot_sequence"
+    )
     blockers: set[str] = set()
     if authorization.decision != "APPROVED":
         blockers.add("NOT_APPROVED")
@@ -219,7 +230,7 @@ def verify_authorization_context(
         current_financial_snapshot_digest, "current_financial_snapshot_digest"
     ):
         blockers.add("STALE_FINANCIAL_SNAPSHOT")
-    if authorization.financial_snapshot_sequence != current_financial_snapshot_sequence:
+    if authorization.financial_snapshot_sequence != current_sequence:
         blockers.add("STALE_FINANCIAL_SEQUENCE")
     if authorization.valuation_policy_digest != _hex64(
         current_valuation_policy_digest, "current_valuation_policy_digest"
