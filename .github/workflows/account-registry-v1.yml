@@ -1,0 +1,38 @@
+name: account-registry-v1
+
+on:
+  push:
+    paths:
+      - 'sinergy_financial_os/account_registry_v1.py'
+      - 'schemas/account_registry_v1.schema.json'
+      - 'config/schema_registry_v13.json'
+      - 'tests/test_account_registry_v1.py'
+      - 'docs/ACCOUNT_REGISTRY_V1_20260819.md'
+      - '.github/workflows/account-registry-v1.yml'
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/account_registry_v1.py'
+      - 'schemas/account_registry_v1.schema.json'
+      - 'config/schema_registry_v13.json'
+      - 'tests/test_account_registry_v1.py'
+      - 'docs/ACCOUNT_REGISTRY_V1_20260819.md'
+      - '.github/workflows/account-registry-v1.yml'
+
+concurrency:
+  group: account-registry-v1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install -e . pytest jsonschema
+      - name: Compile account registry module
+        run: python -m py_compile sinergy_financial_os/account_registry_v1.py
+      - name: Run account registry regressions
+        run: pytest -q tests/test_account_registry_v1.py
