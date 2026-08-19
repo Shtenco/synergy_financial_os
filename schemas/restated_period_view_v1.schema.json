@@ -1,0 +1,25 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.local/schemas/restated_period_view_v1.schema.json",
+  "title":"SINERGY RestatedPeriodView v1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema","view_id","affected_period_id","original_period_close_digest","overlay_digests","excluded_reporting_entry_digests","view_version","previous_restated_view_digest","status","recalculated_financial_metrics","generated_at","authority","ledger_mutation_authority","execution_authority","digest"],
+  "properties":{
+    "schema":{"const":"accounting.restated-period-view/v1"},
+    "view_id":{"type":"string","minLength":1},
+    "affected_period_id":{"type":"string","minLength":1},
+    "original_period_close_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "overlay_digests":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","pattern":"^[0-9a-f]{64}$"}},
+    "excluded_reporting_entry_digests":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","pattern":"^[0-9a-f]{64}$"}},
+    "view_version":{"type":"integer","minimum":1,"maximum":9007199254740991},
+    "previous_restated_view_digest":{"type":["string","null"],"pattern":"^[0-9a-f]{64}$"},
+    "status":{"const":"RESTATED_PRESENTATION"},
+    "recalculated_financial_metrics":{"const":"NOT_PERFORMED"},
+    "generated_at":{"type":"string","pattern":"^.+Z$"},
+    "authority":{"const":"FINANCIAL_OS_PRESENTATION_ONLY"},
+    "ledger_mutation_authority":{"const":"NONE"},
+    "execution_authority":{"const":"NONE"},
+    "digest":{"type":"string","pattern":"^[0-9a-f]{64}$"}
+  }
+}
