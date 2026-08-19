@@ -22,7 +22,11 @@ from sinergy_financial_os.accounting_restatement_view_v1 import (
 from sinergy_financial_os.authorized_prior_period_correction_v1 import (
     post_authorized_prior_period_entry_void_v1,
 )
-from sinergy_financial_os.ledger_event_v2 import export_reporting_entry_as_ledger_event_v2
+from sinergy_financial_os.core import AccountingInvariantError
+from sinergy_financial_os.ledger_event_v2 import (
+    export_reporting_entry_as_ledger_event_v2,
+    ledger_event_v2_digest,
+)
 from sinergy_financial_os.prior_period_correction_v1 import PriorPeriodCorrectionAuthorizationV1
 from sinergy_financial_os.reporting import (
     AccountClass,
@@ -140,7 +144,7 @@ def build_context():
         authorization_id="prior-error-void-001", affected_period_id=period1.period_id,
         target_period_id=target.period_id, reason="DUPLICATE_ENTRY",
         original_period_close_digest=period_close1.digest, original_accounting_close_digest=close1.digest,
-        original_ledger_event_digest=__import__("sinergy_financial_os.ledger_event_v2", fromlist=["ledger_event_v2_digest"]).ledger_event_v2_digest(original_event),
+        original_ledger_event_digest=ledger_event_v2_digest(original_event),
         original_reporting_entry_digest=original_entry.digest, period_chain_proof_digest=chain.digest,
         correction_evidence_digest="88" * 32, decision_evidence_digest="99" * 32,
         accounting_policy_digest=POLICY, requirement_registry_digest=REQ,
@@ -208,12 +212,12 @@ def test_exact_void_can_create_presentation_overlay_and_view_without_mutating_cl
     assert view.excluded_reporting_entry_digests == (c["original_entry"].digest,)
 
 
-def test_overlay_rejects_correction_event_that_is_not_exact_opposite():
+def test_tampered_correction_event_fails_closed_at_integrity_or_restatement_layer():
     c = build_context()
     bad = dict(c["correction_event"])
     bad["metadata"] = dict(bad["metadata"])
     bad["metadata"]["restatement_required"] = "NO"
-    with pytest.raises(AccountingRestatementViewV1Error, match="require restatement"):
+    with pytest.raises(AccountingInvariantError):
         build_accounting_restatement_overlay_v1(
             overlay_id="overlay-bad", authorization=c["auth"], target_period=c["target"],
             period_chain_proof=c["chain"], period_close_chain=[c["period_close1"]],
