@@ -1,0 +1,18 @@
+{
+  "schema":"sinergy.schema-registry/v11",
+  "as_of":"2026-08-19",
+  "base_registry":"config/schema_registry_v10.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V11 keeps post-close economic refund/chargeback adjustment v1 unchanged and adds a separate exact-entry prior-period accounting-error correction path. Historical ReportingEntry, LedgerEvent, AccountingClose and PeriodClose objects remain immutable. The correction is a new evidence-bound opposite entry excluded from current-period realized P&L and marked for later restated-period presentation.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"accounting.prior-period-correction-authorization/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Human/multisig EXACT_ENTRY_VOID authorization for a proven prior-period accounting error. It binds original PeriodClose/AccountingClose/LedgerEvent/ReportingEntry, immutable period ancestry, correction evidence and target accounting-policy/requirement-registry context. Posting is separate, AI authority is NONE, and the resulting ledger entry is excluded from current-period realized P&L."
+    }
+  ]
+}
