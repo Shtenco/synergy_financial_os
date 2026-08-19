@@ -1,0 +1,26 @@
+{
+  "schema":"sinergy.schema-registry/v12",
+  "as_of":"2026-08-19",
+  "base_registry":"config/schema_registry_v11.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V12 preserves all immutable PeriodClose/AccountingClose/Snapshot/Ledger history and adds presentation-only restatement artifacts after a proven exact-entry prior-period correction. V1 does not invent recalculated financial metrics; it records verified exclusion treatments and append-only presentation versions until reconstructible account-registry/valuation replay inputs exist.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"accounting.restatement-overlay/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Presentation-only proof that one exact prior-period ReportingEntry was later proven erroneous, exactly voided, sealed in a later PeriodClose and must be excluded from restated comparative presentation. Historical ledger/close bytes are not mutated."
+    },
+    {
+      "schema_id":"accounting.restated-period-view/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Append-only versioned presentation manifest over restatement overlays for one immutable original PeriodClose. V1 explicitly does not recalculate financial metrics or mutate ledger/history."
+    }
+  ]
+}
