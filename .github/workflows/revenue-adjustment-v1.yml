@@ -1,0 +1,53 @@
+name: revenue-adjustment-v1
+
+on:
+  push:
+    paths:
+      - 'sinergy_financial_os/accounting_period_chain_v1.py'
+      - 'sinergy_financial_os/revenue_adjustment_v1.py'
+      - 'sinergy_financial_os/authorized_revenue_adjustment_v1.py'
+      - 'schemas/accounting_period_chain_proof_v1.schema.json'
+      - 'schemas/revenue_adjustment_authorization_v1.schema.json'
+      - 'config/schema_registry_v10.json'
+      - 'tests/test_revenue_adjustment_v1.py'
+      - 'tests/test_revenue_adjustment_schema_v1.py'
+      - 'docs/POST_CLOSE_REVENUE_ADJUSTMENT_V1_20260819.md'
+      - '.github/workflows/revenue-adjustment-v1.yml'
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/accounting_period_chain_v1.py'
+      - 'sinergy_financial_os/revenue_adjustment_v1.py'
+      - 'sinergy_financial_os/authorized_revenue_adjustment_v1.py'
+      - 'schemas/accounting_period_chain_proof_v1.schema.json'
+      - 'schemas/revenue_adjustment_authorization_v1.schema.json'
+      - 'config/schema_registry_v10.json'
+      - 'tests/test_revenue_adjustment_v1.py'
+      - 'tests/test_revenue_adjustment_schema_v1.py'
+      - 'docs/POST_CLOSE_REVENUE_ADJUSTMENT_V1_20260819.md'
+      - '.github/workflows/revenue-adjustment-v1.yml'
+
+concurrency:
+  group: revenue-adjustment-v1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install -e . pytest jsonschema
+      - name: Compile adjustment modules
+        run: |
+          python -m py_compile \
+            sinergy_financial_os/accounting_period_chain_v1.py \
+            sinergy_financial_os/revenue_adjustment_v1.py \
+            sinergy_financial_os/authorized_revenue_adjustment_v1.py
+      - name: Run revenue adjustment regressions
+        run: |
+          pytest -q \
+            tests/test_revenue_adjustment_v1.py \
+            tests/test_revenue_adjustment_schema_v1.py
