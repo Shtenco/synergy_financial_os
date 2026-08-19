@@ -163,13 +163,18 @@ def verify_account_registry_payload_v1(payload: Mapping[str, Any]) -> AccountReg
             )
         except ValueError as exc:
             raise AccountRegistryV1Error(f"accounts[{index}] has unsupported enum value") from exc
+        immediate_liability = raw.get("immediate_liability")
+        if not isinstance(immediate_liability, bool):
+            raise AccountRegistryV1Error(
+                f"accounts[{index}].immediate_liability must be JSON boolean"
+            )
         spec = ReportingAccountSpec(
             account_id=_text(raw.get("account_id"), f"accounts[{index}].account_id"),
             name=_text(raw.get("name"), f"accounts[{index}].name"),
             account_class=account_class,
             consolidation_class=consolidation_class,
             valuation_class=_text(raw.get("valuation_class"), f"accounts[{index}].valuation_class"),
-            immediate_liability=raw.get("immediate_liability", False),
+            immediate_liability=immediate_liability,
         )
         if raw.get("normal_side") != spec.normal_side:
             raise AccountRegistryV1Error(f"accounts[{index}].normal_side mismatch")
