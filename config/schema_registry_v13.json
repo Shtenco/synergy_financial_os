@@ -1,0 +1,18 @@
+{
+  "schema":"sinergy.schema-registry/v13",
+  "as_of":"2026-08-19",
+  "base_registry":"config/schema_registry_v12.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V13 preserves RestatedPeriodView v1 as presentation-only and adds a reconstructible account.registry/v1 artifact whose inner account_registry_digest is exactly the pre-existing ReportingLedger/FinancialSnapshot digest definition. This provides account-class/consolidation/valuation semantics required by future deterministic historical replay without changing Snapshot v2 bytes.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"account.registry/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Content-addressed portable chart-of-accounts artifact reconstructing the exact ReportingAccountSpec list whose digest is already bound by ReportingLedger and FinancialSnapshot v2. It contains no balances and grants no ledger mutation or execution authority."
+    }
+  ]
+}
