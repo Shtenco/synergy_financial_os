@@ -1,0 +1,26 @@
+{
+  "schema":"sinergy.schema-registry/v10",
+  "as_of":"2026-08-19",
+  "base_registry":"config/schema_registry_v9.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V10 keeps FULL_ONLY revenue reversal v1 unchanged and adds a separate multi-period post-close refund/chargeback adjustment path. Historical PeriodClose objects remain immutable. Late adjustments require explicit PeriodClose ancestry, exact accounting allocation, external evidence and cumulative ceilings against the original recognized revenue/tax/refund-reserve components.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"accounting.period-chain-proof/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Provenance-only immutable ancestry proof linking an original PeriodClose through an ordered cycle-free PeriodClose chain to the opening close of a later target period. It grants no posting, recognition or execution authority."
+    },
+    {
+      "schema_id":"revenue.adjustment-authorization/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Human/multisig post-close REFUND/CHARGEBACK allocation authorization. It binds original recognized revenue and closed-period evidence, a period-chain proof, exact customer refund/revenue/reserve/tax/fee components, target accounting policy and requirement registry. AI authority is NONE and posting remains a separate re-verifying action."
+    }
+  ]
+}
