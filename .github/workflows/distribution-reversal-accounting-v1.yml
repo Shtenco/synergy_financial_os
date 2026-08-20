@@ -1,0 +1,36 @@
+name: distribution-reversal-accounting-v1
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/distribution_reversal_accounting_v1.py'
+      - 'sinergy_financial_os/distribution_reversal_accounting_guard_v1.py'
+      - 'sinergy_financial_os/distribution_reversal_accounting_contract_v1.py'
+      - 'schemas/distribution_reversal_accounting_decision_v1.schema.json'
+      - 'tests/test_distribution_reversal_accounting_v1.py'
+      - 'config/schema_registry_v21.json'
+      - 'docs/DISTRIBUTION_REVERSAL_ACCOUNTING_V1_20260820.md'
+      - '.github/workflows/distribution-reversal-accounting-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated dependencies
+        run: python -m pip install --disable-pip-version-check pytest jsonschema
+      - name: Compile reversal accounting modules
+        run: |
+          python -m py_compile \
+            sinergy_financial_os/distribution_reversal_accounting_v1.py \
+            sinergy_financial_os/distribution_reversal_accounting_guard_v1.py \
+            sinergy_financial_os/distribution_reversal_accounting_contract_v1.py
+      - name: Run distribution reversal accounting regressions
+        run: pytest -q tests/test_distribution_reversal_accounting_v1.py
