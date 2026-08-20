@@ -1,0 +1,40 @@
+name: statement-replay-v1
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/statement_replay_v1.py'
+      - 'sinergy_financial_os/statement_replay_contract_v1.py'
+      - 'schemas/statement_replay_v1.schema.json'
+      - 'tests/test_statement_replay_v1.py'
+      - 'tests/test_statement_replay_schema_v1.py'
+      - 'tests/test_statement_replay_signed_decimal_v1.py'
+      - 'config/schema_registry_v15.json'
+      - 'docs/STATEMENT_REPLAY_V1_20260820.md'
+      - '.github/workflows/statement-replay-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated test dependencies
+        run: python -m pip install --disable-pip-version-check pytest jsonschema
+      - name: Compile replay modules
+        run: |
+          python -m py_compile \
+            sinergy_financial_os/statement_replay_v1.py \
+            sinergy_financial_os/statement_replay_contract_v1.py
+      - name: Run deterministic statement replay regressions
+        run: |
+          pytest -q \
+            tests/test_statement_replay_v1.py \
+            tests/test_statement_replay_schema_v1.py \
+            tests/test_statement_replay_signed_decimal_v1.py
