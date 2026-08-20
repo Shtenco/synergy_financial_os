@@ -1,0 +1,26 @@
+{
+  "schema":"sinergy.schema-registry/v21",
+  "as_of":"2026-08-20",
+  "base_registry":"config/schema_registry_v20.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V21 adds append-only accounting recovery for a MetaPay distribution settlement that was previously SETTLED/accounted and later externally REVERSED/COMPENSATED. Original distribution receipt, utilization, authorization and ledger entry remain immutable; reversal creates a new opposite signed-capital entry and never revives consumed authorization.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.settlement-reversal/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Append-only MetaPay evidence that one previously SETTLED reconciled beneficiary distribution was later externally COMPENSATED. Exact original receipt economics are rebound; authorization remains consumed; V1 permits zero payer-borne reversal fee only."
+    },
+    {
+      "schema_id":"distribution.reversal-accounting-decision/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Financial OS decision requiring proof that the original distribution was actually posted in ReportingLedger and that a MetaPay-authoritative reversal refers to one originally SETTLED receipt. Canonical recovery is EXTERNAL_CAPITAL inflow reversal, excluded from realized P&L."
+    }
+  ]
+}
