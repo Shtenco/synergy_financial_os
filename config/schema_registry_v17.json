@@ -1,0 +1,26 @@
+{
+  "schema":"sinergy.schema-registry/v17",
+  "as_of":"2026-08-20",
+  "base_registry":"config/schema_registry_v16.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V17 adds a content-addressed liquidity.policy/v1 and a non-authorizing distribution.capacity-replay/v1. Capacity is derived from restated realized P&L, original sealed retention/loss/buffer policy, restated HardNAV and post-distribution liquidity headroom. Current LCR alone never authorizes distribution.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"liquidity.policy/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Content-addressed 1w/4w/8w minimum LCR and liquidity-surplus floors. V1 models a cash distribution as immediate reduction of available resources across all horizons. Policy has no authorization or execution authority."
+    },
+    {
+      "schema_id":"distribution.capacity-replay/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Reference-only replay of maximum distribution capacity after historical restatement. Capacity = min(realized-profit budget, HardNAV solvency headroom, post-distribution liquidity headroom), with original invariant failures forcing NO_ACTION until separate reevaluation. It cannot authorize, pay or execute a distribution."
+    }
+  ]
+}
