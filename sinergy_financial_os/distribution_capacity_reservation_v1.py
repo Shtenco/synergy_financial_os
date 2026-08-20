@@ -111,7 +111,7 @@ class DistributionCapacityReservationV1:
         settled = _amount(self.settled_amount, "settled_amount")
         outstanding = _amount(self.outstanding_amount, "outstanding_amount")
         if settled > reserved or outstanding > reserved:
-            raise DistributionCapacityReservationV1Error("settled/outstanding reservation amount exceeds reserved amount")
+            raise DistributionCapacityReservationV1Error("settled/outstanding amount exceeds reserved amount")
         object.__setattr__(self, "reserved_amount", reserved)
         object.__setattr__(self, "settled_amount", settled)
         object.__setattr__(self, "outstanding_amount", outstanding)
@@ -131,10 +131,9 @@ class DistributionCapacityReservationV1:
             raise DistributionCapacityReservationV1Error("reservation version 1 cannot have previous digest")
         if self.version > 1 and self.previous_reservation_digest is None:
             raise DistributionCapacityReservationV1Error("reservation version >1 requires previous digest")
-
         if status == "ACTIVE":
             if self.version != 1 or outstanding != reserved or settled != ZERO:
-                raise DistributionCapacityReservationV1Error("ACTIVE reservation must start fully outstanding with zero settlement")
+                raise DistributionCapacityReservationV1Error("ACTIVE reservation must start fully outstanding")
             if any(value is not None for value in (self.attempt_digest, self.utilization_digest, self.accounting_entry_digest)):
                 raise DistributionCapacityReservationV1Error("ACTIVE reservation cannot claim downstream usage")
         elif status == "ATTEMPTED":
@@ -144,14 +143,14 @@ class DistributionCapacityReservationV1:
                 raise DistributionCapacityReservationV1Error("ATTEMPTED reservation remains fully outstanding")
         elif status == "SETTLED_PENDING_ACCOUNTING":
             if self.attempt_digest is None or self.utilization_digest is None or self.accounting_entry_digest is not None:
-                raise DistributionCapacityReservationV1Error("pending-accounting reservation requires attempt+utilization only")
+                raise DistributionCapacityReservationV1Error("pending-accounting reservation requires attempt+utilization")
             if settled <= ZERO or outstanding != settled:
-                raise DistributionCapacityReservationV1Error("pending-accounting outstanding must equal positive settled amount")
+                raise DistributionCapacityReservationV1Error("pending-accounting outstanding must equal settled amount")
         elif status == "ACCOUNTED":
             if self.attempt_digest is None or self.utilization_digest is None or self.accounting_entry_digest is None:
-                raise DistributionCapacityReservationV1Error("ACCOUNTED reservation requires attempt, utilization and accounting entry")
+                raise DistributionCapacityReservationV1Error("ACCOUNTED reservation requires attempt+utilization+entry")
             if settled <= ZERO or outstanding != ZERO:
-                raise DistributionCapacityReservationV1Error("ACCOUNTED reservation must have zero outstanding amount")
+                raise DistributionCapacityReservationV1Error("ACCOUNTED reservation must have zero outstanding")
         elif status == "RELEASED_TERMINAL_FAILED":
             if self.attempt_digest is None or self.utilization_digest is None or self.accounting_entry_digest is not None:
                 raise DistributionCapacityReservationV1Error("terminal-failed release requires attempt+utilization")
@@ -164,7 +163,7 @@ class DistributionCapacityReservationV1:
                 raise DistributionCapacityReservationV1Error("expired reservation must settle/outstand zero")
 
     def to_dict(self, *, include_digest: bool = True) -> dict[str, Any]:
-        payload: dict[str, Any] = {
+        payload = {
             "schema": RESERVATION_SCHEMA,
             "reservation_id": self.reservation_id,
             "plan_digest": self.plan_digest,
@@ -206,6 +205,7 @@ class DistributionCommitmentStateV1:
     state_id: str
     state_version: int
     previous_state_digest: str | None
+    reporting_currency: str
     current_available_capacity_digest: str
     current_snapshot_digest: str
     current_snapshot_ledger_digest: str
@@ -231,12 +231,13 @@ class DistributionCommitmentStateV1:
         if self.payment_authority != "NONE" or self.execution_authority != "NONE":
             raise DistributionCapacityReservationV1Error("commitment state cannot pay or execute")
         object.__setattr__(self, "state_id", _text(self.state_id, "state_id"))
+        object.__setattr__(self, "reporting_currency", _text(self.reporting_currency, "reporting_currency").upper())
         if isinstance(self.state_version, bool) or not isinstance(self.state_version, int) or self.state_version < 1:
             raise DistributionCapacityReservationV1Error("commitment state version must be positive integer")
         if self.state_version == 1 and self.previous_state_digest is not None:
-            raise DistributionCapacityReservationV1Error("commitment state version 1 cannot have previous digest")
+            raise DistributionCapacityReservationV1Error("state version 1 cannot have previous digest")
         if self.state_version > 1 and self.previous_state_digest is None:
-            raise DistributionCapacityReservationV1Error("commitment state version >1 requires previous digest")
+            raise DistributionCapacityReservationV1Error("state version >1 requires previous digest")
         if self.previous_state_digest is not None:
             object.__setattr__(self, "previous_state_digest", _hex64(self.previous_state_digest, "previous_state_digest", nullable=True))
         for name in ("current_available_capacity_digest", "current_snapshot_digest", "current_snapshot_ledger_digest"):
@@ -254,7 +255,7 @@ class DistributionCommitmentStateV1:
         object.__setattr__(self, "remaining_authorizable_capacity", remaining)
         digests = tuple(sorted(_hex64(item, "reservation_latest_digest") for item in self.reservation_latest_digests))
         if len(digests) != len(set(digests)):
-            raise DistributionCapacityReservationV1Error("commitment-state reservation digests must be unique")
+            raise DistributionCapacityReservationV1Error("reservation latest digests must be unique")
         object.__setattr__(self, "reservation_latest_digests", digests)
         blockers = tuple(sorted({_text(item, "blocker") for item in self.blockers}))
         if outstanding > capacity and "OUTSTANDING_COMMITMENTS_EXCEED_CURRENT_CAPACITY" not in blockers:
@@ -266,11 +267,12 @@ class DistributionCommitmentStateV1:
         object.__setattr__(self, "generated_at", _utc(self.generated_at, "generated_at"))
 
     def to_dict(self, *, include_digest: bool = True) -> dict[str, Any]:
-        payload: dict[str, Any] = {
+        payload = {
             "schema": STATE_SCHEMA,
             "state_id": self.state_id,
             "state_version": self.state_version,
             "previous_state_digest": self.previous_state_digest,
+            "reporting_currency": self.reporting_currency,
             "current_available_capacity_digest": self.current_available_capacity_digest,
             "current_snapshot_digest": self.current_snapshot_digest,
             "current_snapshot_ledger_digest": self.current_snapshot_ledger_digest,
@@ -298,12 +300,7 @@ class DistributionCommitmentStateV1:
 
 
 class DistributionCommitmentBookV1:
-    """Reference serial commitment book.
-
-    Production must implement the same transitions with durable transactional
-    storage, a unique reservation/plan key, and compare-and-swap on the previous
-    commitment-state digest before exposing an authorization or payment handoff.
-    """
+    """Reference serial commitment book; production must use durable CAS storage."""
 
     def __init__(self) -> None:
         self._latest: dict[str, DistributionCapacityReservationV1] = {}
@@ -323,19 +320,27 @@ class DistributionCommitmentBookV1:
     def _outstanding(self) -> Decimal:
         return sum((item.outstanding_amount for item in self._latest.values()), ZERO)
 
+    def _assert_currency_domain(self, capacity: DistributionAvailableCapacityV2) -> None:
+        currencies = {item.distribution_currency for item in self._latest.values() if item.outstanding_amount > ZERO}
+        if currencies and currencies != {capacity.reporting_currency}:
+            raise DistributionCapacityReservationV1Error("one commitment book cannot mix outstanding distribution currencies")
+
     def _next_state(self, capacity: DistributionAvailableCapacityV2, *, generated_at: datetime) -> DistributionCommitmentStateV1:
-        if capacity.status != "CAPACITY_AVAILABLE" or capacity.final_available_capacity <= ZERO:
-            raise DistributionCapacityReservationV1Error("current DistributionAvailableCapacity v2 is not available")
+        self._assert_currency_domain(capacity)
         previous = self._state
         version = 1 if previous is None else previous.state_version + 1
-        previous_digest = None if previous is None else previous.digest
         outstanding = self._outstanding()
-        blockers = () if outstanding <= capacity.final_available_capacity else ("OUTSTANDING_COMMITMENTS_EXCEED_CURRENT_CAPACITY",)
+        blockers = set()
+        if capacity.status != "CAPACITY_AVAILABLE" or capacity.final_available_capacity <= ZERO:
+            blockers.add("CURRENT_AVAILABLE_CAPACITY_NO_ACTION")
+        if outstanding > capacity.final_available_capacity:
+            blockers.add("OUTSTANDING_COMMITMENTS_EXCEED_CURRENT_CAPACITY")
         remaining = max(ZERO, capacity.final_available_capacity - outstanding)
         state = DistributionCommitmentStateV1(
             state_id=f"commitment-state-{version}",
             state_version=version,
-            previous_state_digest=previous_digest,
+            previous_state_digest=None if previous is None else previous.digest,
+            reporting_currency=capacity.reporting_currency,
             current_available_capacity_digest=capacity.digest,
             current_snapshot_digest=capacity.current_financial_snapshot_digest,
             current_snapshot_ledger_digest=capacity.current_snapshot_ledger_digest,
@@ -344,7 +349,7 @@ class DistributionCommitmentBookV1:
             outstanding_commitments=outstanding,
             remaining_authorizable_capacity=remaining,
             reservation_latest_digests=tuple(item.digest for item in self._latest.values()),
-            blockers=blockers,
+            blockers=tuple(blockers),
             status="AUTHORIZATION_CAPACITY_AVAILABLE" if remaining > ZERO and not blockers else "NO_ACTION",
             generated_at=generated_at,
         )
@@ -354,18 +359,10 @@ class DistributionCommitmentBookV1:
     def refresh_capacity(self, capacity: DistributionAvailableCapacityV2, *, generated_at: datetime) -> DistributionCommitmentStateV1:
         return self._next_state(capacity, generated_at=generated_at)
 
-    def reserve(
-        self,
-        *,
-        reservation_id: str,
-        plan_digest: str,
-        plan_amount: Decimal | int | str,
-        affected_period_id: str,
-        distribution_currency: str,
-        capacity: DistributionAvailableCapacityV2,
-        created_at: datetime,
-        expires_at: datetime,
-    ) -> tuple[DistributionCapacityReservationV1, DistributionCommitmentStateV1]:
+    def reserve(self, *, reservation_id: str, plan_digest: str, plan_amount: Decimal | int | str,
+                affected_period_id: str, distribution_currency: str,
+                capacity: DistributionAvailableCapacityV2, created_at: datetime,
+                expires_at: datetime) -> tuple[DistributionCapacityReservationV1, DistributionCommitmentStateV1]:
         now = _utc(created_at, "created_at")
         expires = _utc(expires_at, "expires_at")
         if expires <= now:
@@ -376,6 +373,8 @@ class DistributionCommitmentBookV1:
             raise DistributionCapacityReservationV1Error("duplicate reservation_id")
         if plan in self._plan_reservation:
             raise DistributionCapacityReservationV1Error("distribution plan already has a reservation")
+        if capacity.status != "CAPACITY_AVAILABLE" or capacity.final_available_capacity <= ZERO:
+            raise DistributionCapacityReservationV1Error("current capacity is not reservable")
         if affected_period_id != capacity.affected_period_id:
             raise DistributionCapacityReservationV1Error("reservation affected period differs from capacity")
         if distribution_currency.upper().strip() != capacity.reporting_currency:
@@ -384,10 +383,10 @@ class DistributionCommitmentBookV1:
             self._next_state(capacity, generated_at=now)
         state = self._state
         assert state is not None
-        if state.current_snapshot_ledger_digest != capacity.current_snapshot_ledger_digest or state.current_snapshot_ledger_sequence != capacity.current_snapshot_sequence:
-            raise DistributionCapacityReservationV1Error("commitment state / capacity ledger basis mismatch")
+        if state.blockers:
+            raise DistributionCapacityReservationV1Error("current commitment state is not reservable")
         amount = _amount(plan_amount, "plan_amount", positive=True)
-        if state.blockers or amount > state.remaining_authorizable_capacity:
+        if amount > state.remaining_authorizable_capacity:
             raise DistributionCapacityReservationV1Error("insufficient unreserved distribution authorization capacity")
         reservation = DistributionCapacityReservationV1(
             reservation_id=reservation_key,
@@ -411,42 +410,33 @@ class DistributionCommitmentBookV1:
         self._plan_reservation[plan] = reservation_key
         return reservation, self._next_state(capacity, generated_at=now)
 
-    def mark_attempted(
-        self,
-        reservation_id: str,
-        *,
-        attempt_digest: str,
-        capacity: DistributionAvailableCapacityV2,
-        attempted_at: datetime,
-    ) -> tuple[DistributionCapacityReservationV1, DistributionCommitmentStateV1]:
+    def _require_current_capacity(self, capacity: DistributionAvailableCapacityV2) -> DistributionCommitmentStateV1:
+        if self._state is None or self._state.current_available_capacity_digest != capacity.digest:
+            self._next_state(capacity, generated_at=capacity.generated_at)
+        assert self._state is not None
+        return self._state
+
+    def mark_attempted(self, reservation_id: str, *, attempt_digest: str,
+                       capacity: DistributionAvailableCapacityV2, attempted_at: datetime):
         current = self.reservation(reservation_id)
         now = _utc(attempted_at, "attempted_at")
+        state = self._require_current_capacity(capacity)
         if current.status != "ACTIVE":
             raise DistributionCapacityReservationV1Error("only ACTIVE reservation can become ATTEMPTED")
         if now >= current.expires_at:
             raise DistributionCapacityReservationV1Error("expired reservation cannot be attempted")
-        updated = replace(
-            current,
-            status="ATTEMPTED",
-            version=current.version + 1,
-            previous_reservation_digest=current.digest,
-            attempt_digest=_hex64(attempt_digest, "attempt_digest"),
-            updated_at=now,
-        )
+        if state.blockers or state.outstanding_commitments > state.current_available_capacity:
+            raise DistributionCapacityReservationV1Error("current commitment/capacity state blocks attempt")
+        updated = replace(current, status="ATTEMPTED", version=current.version + 1,
+                          previous_reservation_digest=current.digest,
+                          attempt_digest=_hex64(attempt_digest, "attempt_digest"), updated_at=now)
         self._latest[current.reservation_id] = updated
         return updated, self._next_state(capacity, generated_at=now)
 
-    def apply_terminal_utilization(
-        self,
-        reservation_id: str,
-        *,
-        utilization_digest: str,
-        utilization_status: str,
-        planned_total_amount: Decimal | int | str,
-        settled_total_amount: Decimal | int | str,
-        capacity: DistributionAvailableCapacityV2,
-        finalized_at: datetime,
-    ) -> tuple[DistributionCapacityReservationV1, DistributionCommitmentStateV1]:
+    def apply_terminal_utilization(self, reservation_id: str, *, utilization_digest: str,
+                                   utilization_status: str, planned_total_amount: Decimal | int | str,
+                                   settled_total_amount: Decimal | int | str,
+                                   capacity: DistributionAvailableCapacityV2, finalized_at: datetime):
         current = self.reservation(reservation_id)
         if current.status != "ATTEMPTED":
             raise DistributionCapacityReservationV1Error("terminal utilization requires ATTEMPTED reservation")
@@ -460,81 +450,54 @@ class DistributionCommitmentBookV1:
         if status == "FULLY_SETTLED" and settled != planned:
             raise DistributionCapacityReservationV1Error("FULLY_SETTLED must settle full reservation")
         if status == "PARTIALLY_SETTLED_REQUIRES_NEW_PLAN" and not (ZERO < settled < planned):
-            raise DistributionCapacityReservationV1Error("partial utilization must have 0 < settled < reserved")
+            raise DistributionCapacityReservationV1Error("partial utilization amount mismatch")
         if status == "FAILED_NO_SETTLEMENT_REQUIRES_NEW_AUTHORIZATION" and settled != ZERO:
             raise DistributionCapacityReservationV1Error("failed utilization must settle zero")
         now = _utc(finalized_at, "finalized_at")
         if now < current.updated_at:
             raise DistributionCapacityReservationV1Error("utilization cannot predate attempt")
-        if settled > ZERO:
-            next_status = "SETTLED_PENDING_ACCOUNTING"
-            outstanding = settled
-        else:
-            next_status = "RELEASED_TERMINAL_FAILED"
-            outstanding = ZERO
-        updated = replace(
-            current,
-            status=next_status,
-            version=current.version + 1,
-            previous_reservation_digest=current.digest,
-            utilization_digest=_hex64(utilization_digest, "utilization_digest"),
-            settled_amount=settled,
-            outstanding_amount=outstanding,
-            updated_at=now,
-        )
+        next_status = "SETTLED_PENDING_ACCOUNTING" if settled > ZERO else "RELEASED_TERMINAL_FAILED"
+        updated = replace(current, status=next_status, version=current.version + 1,
+                          previous_reservation_digest=current.digest,
+                          utilization_digest=_hex64(utilization_digest, "utilization_digest"),
+                          settled_amount=settled, outstanding_amount=settled, updated_at=now)
         self._latest[current.reservation_id] = updated
         return updated, self._next_state(capacity, generated_at=now)
 
-    def mark_accounted(
-        self,
-        reservation_id: str,
-        *,
-        accounting_entry_digest: str,
-        accounted_amount: Decimal | int | str,
-        capacity: DistributionAvailableCapacityV2,
-        accounted_at: datetime,
-    ) -> tuple[DistributionCapacityReservationV1, DistributionCommitmentStateV1]:
+    def mark_accounted(self, reservation_id: str, *, accounting_entry_digest: str,
+                       accounted_amount: Decimal | int | str,
+                       refreshed_capacity: DistributionAvailableCapacityV2,
+                       accounted_at: datetime):
         current = self.reservation(reservation_id)
         if current.status != "SETTLED_PENDING_ACCOUNTING":
             raise DistributionCapacityReservationV1Error("only settled-pending reservation can become ACCOUNTED")
         amount = _amount(accounted_amount, "accounted_amount", positive=True)
         if amount != current.settled_amount or amount != current.outstanding_amount:
             raise DistributionCapacityReservationV1Error("accounted amount must equal exact settled outstanding reservation")
+        if refreshed_capacity.current_snapshot_sequence <= current.capacity_basis_ledger_sequence:
+            raise DistributionCapacityReservationV1Error("ACCOUNTED transition requires a refreshed closed ledger after payout posting")
+        if refreshed_capacity.current_snapshot_ledger_digest == current.capacity_basis_ledger_digest:
+            raise DistributionCapacityReservationV1Error("ACCOUNTED transition cannot reuse pre-payout ledger digest")
         now = _utc(accounted_at, "accounted_at")
         if now < current.updated_at:
             raise DistributionCapacityReservationV1Error("accounting cannot predate utilization")
-        updated = replace(
-            current,
-            status="ACCOUNTED",
-            version=current.version + 1,
-            previous_reservation_digest=current.digest,
-            accounting_entry_digest=_hex64(accounting_entry_digest, "accounting_entry_digest"),
-            outstanding_amount=ZERO,
-            updated_at=now,
-        )
+        updated = replace(current, status="ACCOUNTED", version=current.version + 1,
+                          previous_reservation_digest=current.digest,
+                          accounting_entry_digest=_hex64(accounting_entry_digest, "accounting_entry_digest"),
+                          outstanding_amount=ZERO, updated_at=now)
         self._latest[current.reservation_id] = updated
-        return updated, self._next_state(capacity, generated_at=now)
+        return updated, self._next_state(refreshed_capacity, generated_at=now)
 
-    def release_expired(
-        self,
-        reservation_id: str,
-        *,
-        capacity: DistributionAvailableCapacityV2,
-        released_at: datetime,
-    ) -> tuple[DistributionCapacityReservationV1, DistributionCommitmentStateV1]:
+    def release_expired(self, reservation_id: str, *, capacity: DistributionAvailableCapacityV2,
+                        released_at: datetime):
         current = self.reservation(reservation_id)
         now = _utc(released_at, "released_at")
         if current.status != "ACTIVE":
             raise DistributionCapacityReservationV1Error("only unattempted ACTIVE reservation can expire-release")
         if now < current.expires_at:
             raise DistributionCapacityReservationV1Error("reservation cannot release before expiry")
-        updated = replace(
-            current,
-            status="RELEASED_EXPIRED",
-            version=current.version + 1,
-            previous_reservation_digest=current.digest,
-            outstanding_amount=ZERO,
-            updated_at=now,
-        )
+        updated = replace(current, status="RELEASED_EXPIRED", version=current.version + 1,
+                          previous_reservation_digest=current.digest,
+                          outstanding_amount=ZERO, updated_at=now)
         self._latest[current.reservation_id] = updated
         return updated, self._next_state(capacity, generated_at=now)
