@@ -1,0 +1,18 @@
+{
+  "schema":"sinergy.schema-registry/v15",
+  "as_of":"2026-08-20",
+  "base_registry":"config/schema_registry_v14.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V15 adds deterministic accounting.statement-replay/v1 over immutable PeriodClose/AccountingClose evidence, reconstructible account.registry/v1, valuation.policy-artifact/v1 and RestatedPeriodView v1. It recalculates only independently reproducible accounting/NAV/P&L metrics; liquidity and distribution metrics remain explicitly NOT_PERFORMED.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"accounting.statement-replay/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Reference-only deterministic historical accounting replay. It verifies the original sealed LedgerEvent v2 prefix first, reconstructs chart/valuation semantics from portable artifacts, applies only explicit restatement exclusions, derives opening/closing period sequences from immutable closes, and recalculates HardNAV/LiquidNAV/EconomicNAV plus period realized revenue/P&L. It cannot mutate canonical history, calculate LCR/distribution metrics, authorize funds, or execute actions."
+    }
+  ]
+}
