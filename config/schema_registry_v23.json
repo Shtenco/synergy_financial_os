@@ -1,0 +1,26 @@
+{
+  "schema":"sinergy.schema-registry/v23",
+  "as_of":"2026-08-21",
+  "base_registry":"config/schema_registry_v22.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V23 prevents concurrent over-authorization of one current distribution capacity by adding a non-accounting reservation/commitment layer. Reservations reduce authorizable capacity before settlement without changing ReportingLedger/P&L/NAV, remain outstanding through settlement-to-accounting gaps, and are released only by exact terminal/accounting transitions.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.capacity-reservation/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_pay_system","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Version-chained non-accounting commitment bound to one exact Plan digest, affected period, currency and DistributionAvailableCapacity v2 basis. ACTIVE/ATTEMPTED amounts remain fully outstanding; partial settlement releases failed remainder but settled amount remains outstanding until exact canonical owner-distribution accounting is proven."
+    },
+    {
+      "schema_id":"distribution.commitment-state/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_pay_system","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Aggregate current authorization-capacity state for one reporting-currency domain. remaining_authorizable_capacity=max(0,current DistributionAvailableCapacity v2 - outstanding latest reservations). It is commitment/reference state only and cannot authorize a payment by itself; production requires durable transactional CAS on state version/digest."
+    }
+  ]
+}
