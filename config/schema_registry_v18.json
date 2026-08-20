@@ -1,0 +1,26 @@
+{
+  "schema":"sinergy.schema-registry/v18",
+  "as_of":"2026-08-20",
+  "base_registry":"config/schema_registry_v17.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V18 separates mathematical distribution capacity from exact beneficiary planning and human/multisig authorization. Distribution plan bytes fix source, currency, beneficiary destinations, amounts and idempotency keys before approval; authorization remains non-executing and stale when plan/capacity/policy context changes.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.plan/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_pay_system","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Exact same-currency single-batch beneficiary plan bound to one DistributionCapacityReplay and LiquidityReplay. Source account, every destination, amount and payment idempotency key are content-addressed before authorization. Plan has no authorization or execution authority."
+    },
+    {
+      "schema_id":"distribution.authorization/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_pay_system","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Human-committee or multisig exact-batch distribution decision binding current Plan, CapacityReplay, LiquidityReplay, beneficiary set, requirement registry and approver policy. AI authority is NONE. Execution is a separate MetaPay batch handoff."
+    }
+  ]
+}
