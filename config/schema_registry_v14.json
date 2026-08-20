@@ -1,0 +1,18 @@
+{
+  "schema":"sinergy.schema-registry/v14",
+  "as_of":"2026-08-19",
+  "base_registry":"config/schema_registry_v13.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V14 preserves the existing ValuationPolicy digest semantics and adds a portable valuation.policy-artifact/v1 wrapper so historical replay can reconstruct the exact valuation rules already bound by FinancialSnapshot v2. No valuation logic or Snapshot bytes are changed.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"valuation.policy-artifact/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Portable reference-only wrapper over the pre-existing valuation-policy/v1 canonical body and digest. It reconstructs exact valuation rules for replay but cannot change valuation policy or execute actions."
+    }
+  ]
+}
