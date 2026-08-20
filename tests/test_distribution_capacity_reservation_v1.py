@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -41,7 +41,9 @@ def capacity(
     snapshot_digest: str = "12" * 32,
     blockers: tuple[str, ...] = (),
 ) -> DistributionAvailableCapacityV2:
-    final = Decimal("0") if blockers else Decimal(amount)
+    liquidity_capacity = Decimal(amount)
+    eight_week_resources = Decimal("72") + liquidity_capacity
+    final = Decimal("0") if blockers else min(Decimal("15"), Decimal("70"), liquidity_capacity)
     remaining_budget = Decimal("0") if "NO_REMAINING_PERIOD_BUDGET" in blockers else Decimal("15")
     return DistributionAvailableCapacityV2(
         capacity_id=f"capacity-{sequence}-{amount}-{'blocked' if blockers else 'open'}",
@@ -61,12 +63,21 @@ def capacity(
         current_hard_nav=Decimal("90"),
         current_required_hard_nav_buffer=Decimal("20"),
         current_solvency_headroom=Decimal("70"),
-        current_liquidity_distribution_capacity=Decimal("8"),
+        current_liquidity_distribution_capacity=liquidity_capacity,
         final_available_capacity=final,
         horizon_headrooms=(
             DistributionLiquidityHeadroomV1(1, Decimal("40"), Decimal("10"), Decimal("1.2"), Decimal("5"), Decimal("28"), Decimal("25"), Decimal("25")),
             DistributionLiquidityHeadroomV1(4, Decimal("65"), Decimal("30"), Decimal("1.2"), Decimal("5"), Decimal("29"), Decimal("30"), Decimal("29")),
-            DistributionLiquidityHeadroomV1(8, Decimal("80"), Decimal("60"), Decimal("1.2"), Decimal("5"), Decimal("8"), Decimal("15"), Decimal("8")),
+            DistributionLiquidityHeadroomV1(
+                8,
+                eight_week_resources,
+                Decimal("60"),
+                Decimal("1.2"),
+                Decimal("5"),
+                liquidity_capacity,
+                eight_week_resources - Decimal("65"),
+                liquidity_capacity,
+            ),
         ),
         blockers=blockers,
         status="NO_ACTION" if blockers else "CAPACITY_AVAILABLE",
