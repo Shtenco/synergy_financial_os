@@ -55,7 +55,14 @@ def liquidity() -> LiquidityReplayV1:
 
 
 def capacity(liq: LiquidityReplayV1, *, final: Decimal = Decimal("18")) -> DistributionCapacityReplayV1:
-    h8 = final
+    if final == Decimal("18"):
+        h8_min_surplus = Decimal("5")
+        h8_surplus_headroom = Decimal("25")
+    elif final == Decimal("17"):
+        h8_min_surplus = Decimal("13")
+        h8_surplus_headroom = Decimal("17")
+    else:
+        raise ValueError("test fixture supports only 18 or 17")
     return DistributionCapacityReplayV1(
         replay_id="capacity-for-distribution", affected_period_id="period-1",
         statement_replay_digest=liq.statement_replay_digest, liquidity_replay_digest=liq.digest,
@@ -64,12 +71,12 @@ def capacity(liq: LiquidityReplayV1, *, final: Decimal = Decimal("18")) -> Distr
         required_retention=Decimal("5"), loss_carryforward=Decimal("0"), required_hard_nav_buffer=Decimal("20"),
         restated_realized_external_pnl=Decimal("30"), restated_hard_nav=Decimal("100"),
         realized_profit_budget=Decimal("25"), solvency_headroom=Decimal("80"),
-        accounting_distribution_capacity=Decimal("25"), liquidity_distribution_capacity=h8,
+        accounting_distribution_capacity=Decimal("25"), liquidity_distribution_capacity=final,
         final_distribution_capacity=final,
         horizon_headrooms=(
             DistributionLiquidityHeadroomV1(1, Decimal("50"), Decimal("10"), Decimal("1.2"), Decimal("5"), Decimal("38"), Decimal("35"), Decimal("35")),
             DistributionLiquidityHeadroomV1(4, Decimal("75"), Decimal("30"), Decimal("1.2"), Decimal("5"), Decimal("39"), Decimal("40"), Decimal("39")),
-            DistributionLiquidityHeadroomV1(8, Decimal("90"), Decimal("60"), Decimal("1.2"), Decimal("5"), Decimal("18"), Decimal("25"), h8),
+            DistributionLiquidityHeadroomV1(8, Decimal("90"), Decimal("60"), Decimal("1.2"), h8_min_surplus, Decimal("18"), h8_surplus_headroom, final),
         ), blockers=(), status="CAPACITY_AVAILABLE", generated_at=dt(3,20)
     )
 
