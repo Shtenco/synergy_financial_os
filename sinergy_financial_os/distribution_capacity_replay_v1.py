@@ -236,20 +236,35 @@ def build_distribution_capacity_replay_v1(
     snapshot = verify_financial_snapshot_v2_payload(original_financial_snapshot)
     if snapshot["digest"] != statement_replay.original_financial_snapshot_digest:
         raise DistributionCapacityReplayV1Error("StatementReplay / original FinancialSnapshot mismatch")
+    if liquidity_replay.original_financial_snapshot_digest != snapshot["digest"]:
+        raise DistributionCapacityReplayV1Error("LiquidityReplay / original FinancialSnapshot mismatch")
     if liquidity_replay.statement_replay_digest != statement_replay.digest:
         raise DistributionCapacityReplayV1Error("LiquidityReplay / StatementReplay mismatch")
     if liquidity_replay.liquidity_resources_digest != liquidity_resources.digest:
         raise DistributionCapacityReplayV1Error("LiquidityReplay / LiquidityResources mismatch")
     if liquidity_resources.statement_replay_digest != statement_replay.digest:
         raise DistributionCapacityReplayV1Error("LiquidityResources / StatementReplay mismatch")
+    if liquidity_resources.affected_period_id != statement_replay.affected_period_id:
+        raise DistributionCapacityReplayV1Error("LiquidityResources affected period mismatch")
+    if liquidity_replay.affected_period_id != statement_replay.affected_period_id:
+        raise DistributionCapacityReplayV1Error("LiquidityReplay affected period mismatch")
+    if liquidity_replay.restated_liquid_haircut_assets != statement_replay.liquid_haircut_assets:
+        raise DistributionCapacityReplayV1Error("LiquidityReplay / StatementReplay liquid assets mismatch")
     if liquidity_resources.liquidity_policy_digest != liquidity_policy.digest:
         raise DistributionCapacityReplayV1Error("LiquidityResources / LiquidityPolicy digest mismatch")
     if liquidity_policy.reporting_currency != liquidity_replay.reporting_currency:
         raise DistributionCapacityReplayV1Error("LiquidityPolicy reporting currency mismatch")
+    if liquidity_resources.reporting_currency != liquidity_replay.reporting_currency:
+        raise DistributionCapacityReplayV1Error("LiquidityResources / LiquidityReplay currency mismatch")
+    if snapshot.get("reporting_currency") != liquidity_replay.reporting_currency:
+        raise DistributionCapacityReplayV1Error("FinancialSnapshot / liquidity reporting currency mismatch")
     if liquidity_policy.as_of > liquidity_replay.as_of:
         raise DistributionCapacityReplayV1Error("LiquidityPolicy cannot be from the future")
-    if liquidity_replay.affected_period_id != statement_replay.affected_period_id:
-        raise DistributionCapacityReplayV1Error("affected period mismatch")
+
+    resources_by_horizon = liquidity_resources.resources_by_horizon()
+    for state in liquidity_replay.horizons:
+        if state.liquid_resources != resources_by_horizon[state.horizon_weeks]:
+            raise DistributionCapacityReplayV1Error("LiquidityReplay resources differ from LiquidityResources")
 
     retention = _d(snapshot.get("required_retention"), "required_retention", nonnegative=True)
     loss_cf = _d(snapshot.get("loss_carryforward"), "loss_carryforward", nonnegative=True)
@@ -298,7 +313,12 @@ def build_distribution_capacity_replay_v1(
 
     final_capacity = ZERO if blockers else min(accounting_capacity, liquidity_capacity)
     generated = _utc(generated_at, "generated_at")
-    latest_input_time = max(statement_replay.generated_at, liquidity_replay.generated_at, liquidity_resources.generated_at, liquidity_policy.generated_at)
+    latest_input_time = max(
+        statement_replay.generated_at,
+        liquidity_replay.generated_at,
+        liquidity_resources.generated_at,
+        liquidity_policy.generated_at,
+    )
     if generated < latest_input_time:
         raise DistributionCapacityReplayV1Error("capacity replay cannot predate input artifacts")
     return DistributionCapacityReplayV1(
