@@ -1,0 +1,34 @@
+{
+  "schema":"sinergy.schema-registry/v23",
+  "as_of":"2026-08-23",
+  "base_registry":"config/schema_registry_v22.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V23 adds a fee-budgeted owner-distribution handoff above distribution.available-capacity/v2. Beneficiary principal and payer-borne external settlement fees are distinct economics. For every exact batch, principal_total + external_fee_budget must not exceed the current Financial OS final_available_capacity. MetaPay may later spend less fee than the budget but may never reduce beneficiary principal to pay a fee or exceed the authorized fee/outflow ceiling. Legacy distribution Plan/Authorization/ExecutionTicket v1 remain immutable and carry zero payer-borne external-fee authority.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.plan/v2",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_pay_system","Shtenco/synergy_ai_blockchain","Shtenco/synergychain"],
+      "authority_note":"Non-authorizing exact beneficiary batch bound to one current distribution.available-capacity/v2. Separately states beneficiary principal and payer-borne external fee budget; principal + fee budget cannot exceed current available capacity."
+    },
+    {
+      "schema_id":"distribution.authorization/v2",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_pay_system"],
+      "authority_note":"Human-committee or multisig decision over the exact Plan v2 principal, fee budget and total outflow ceiling. AI authority is NONE. Authorization does not execute payment and requires a separate short-lived execution ticket before MetaPay handoff."
+    },
+    {
+      "schema_id":"distribution.execution-ticket/v2",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_pay_system"],
+      "authority_note":"Short-lived final Financial OS handoff gate. Re-verifies exact current Plan v2, Authorization v2 and AvailableCapacity v2 and carries the immutable principal, fee budget and total cash-outflow ceiling. payment_authority is METAPAY_ONLY; the ticket itself has execution_authority NONE."
+    }
+  ]
+}

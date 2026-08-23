@@ -1,0 +1,33 @@
+name: Distribution Fee Budget v3
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/distribution_plan_v2.py'
+      - 'sinergy_financial_os/distribution_authorization_v2.py'
+      - 'sinergy_financial_os/distribution_execution_ticket_v2.py'
+      - 'sinergy_financial_os/distribution_fee_budget_contract_v3.py'
+      - 'schemas/distribution_*_v2.schema.json'
+      - 'config/schema_registry_v23.json'
+      - 'tests/test_distribution_fee_budget_v3.py'
+      - '.github/workflows/distribution-fee-budget-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pip pytest jsonschema
+      - run: python -m pip install -e .
+      - run: pytest -q tests/test_distribution_budget_current_capacity_v2.py tests/test_distribution_budget_current_capacity_contract_v2.py tests/test_distribution_fee_budget_v3.py
