@@ -1,0 +1,18 @@
+{
+  "schema":"sinergy.schema-registry/v24",
+  "as_of":"2026-08-23",
+  "base_registry":"config/schema_registry_v23.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V24 consumes fee-budgeted MetaPay settlement/utilization v2 and posts settled owner-distribution principal and actually incurred external settlement fees as separate canonical accounting entries. Owner-distribution principal remains EXTERNAL_CAPITAL and excluded from realized P&L. Actual payer-borne external fees are EXTERNAL_EXPENSE and therefore reduce realized external P&L. Unused authorized fee budget is not posted and is not profit.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.fee-accounting-decision/v2",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain"],
+      "authority_note":"Evidence-derived decision over MetaPay DistributionBatchAttempt/SettlementReceipt/Utilization v2. Separately derives settled principal and actual external fee. Principal posts as OWNER_DISTRIBUTION external capital and is excluded from realized P&L. Actual fee posts as OWNER_DISTRIBUTION_SETTLEMENT_FEE external expense and reduces realized external P&L."
+    }
+  ]
+}
