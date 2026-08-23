@@ -1,0 +1,30 @@
+name: Distribution Fee Accounting v2
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/distribution_fee_accounting_v2.py'
+      - 'schemas/distribution_fee_accounting_decision_v2.schema.json'
+      - 'config/schema_registry_v24.json'
+      - 'tests/test_distribution_fee_accounting_v2.py'
+      - '.github/workflows/distribution-fee-accounting-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11','3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --upgrade pip pytest jsonschema
+      - run: python -m pip install -e .
+      - run: pytest -q tests/test_distribution_fee_budget_v3.py tests/test_distribution_fee_accounting_v2.py
