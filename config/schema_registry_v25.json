@@ -1,0 +1,18 @@
+{
+  "schema":"sinergy.schema-registry/v25",
+  "as_of":"2026-08-23",
+  "base_registry":"config/schema_registry_v24.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V25 makes remaining distributable-period profit fee-aware without double counting. OWNER_DISTRIBUTION principal continues to consume entitlement because it is excluded from P&L. OWNER_DISTRIBUTION_SETTLEMENT_FEE entries reduce the historical gross profit budget only when they are posted after the base StatementReplay closing sequence and are attributed to the same affected period; pre-close fee expense is already represented in the base realized P&L and must not be deducted again.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.budget-state/v2",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os"],
+      "authority_note":"Ledger-derived remaining profit entitlement. Formula: fee_adjusted_period_profit_budget=max(0,gross_period_profit_budget-post_close_settlement_fee_expenses); remaining=max(0,fee_adjusted_period_profit_budget-net_consumed_distribution_budget). Binds exact base StatementReplay closing sequence to prevent fee double counting. No authorization/payment/execution/AI authority."
+    }
+  ]
+}
