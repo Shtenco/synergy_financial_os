@@ -1,0 +1,34 @@
+{
+  "schema":"sinergy.schema-registry/v27",
+  "as_of":"2026-08-24",
+  "base_registry":"config/schema_registry_v26.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V27 creates a new distribution handoff family bound exactly to distribution.available-capacity/v3. Historical Plan/Authorization/ExecutionTicket v1/v2 remain immutable. The v3 path cannot accept legacy capacity generations and preserves separate beneficiary principal and payer-borne external-fee budget semantics.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.plan/v3",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os"],
+      "authority_note":"Exact beneficiary batch plan bound only to distribution.available-capacity/v3. Principal + fee budget must fit the fee-aware current capacity. No authorization/payment/execution/AI authority."
+    },
+    {
+      "schema_id":"distribution.authorization/v3",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_pay_system"],
+      "authority_note":"Human committee or multisig decision only. Binds exact Plan v3, AvailableCapacity v3, beneficiary set, principal, fee budget and total ceiling. AI authority NONE."
+    },
+    {
+      "schema_id":"distribution.execution-ticket/v3",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_pay_system"],
+      "authority_note":"Short-lived final Financial OS handoff gate for the exact v3 bundle. Payment authority is MetaPay-only handoff; execution authority remains NONE."
+    }
+  ]
+}

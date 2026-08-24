@@ -1,0 +1,34 @@
+name: Distribution Handoff v3
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/distribution_plan_v3.py'
+      - 'sinergy_financial_os/distribution_authorization_v3.py'
+      - 'sinergy_financial_os/distribution_execution_ticket_v3.py'
+      - 'schemas/distribution_plan_v3.schema.json'
+      - 'schemas/distribution_authorization_v3.schema.json'
+      - 'schemas/distribution_execution_ticket_v3.schema.json'
+      - 'tests/test_distribution_handoff_v3.py'
+      - 'config/schema_registry_v27.json'
+      - 'docs/DISTRIBUTION_HANDOFF_V3_FEE_AWARE_20260824.md'
+      - '.github/workflows/distribution-handoff-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install package and tests
+        run: python -m pip install -e . pytest jsonschema
+      - name: Compile v3 handoff modules
+        run: python -m compileall -q sinergy_financial_os/distribution_plan_v3.py sinergy_financial_os/distribution_authorization_v3.py sinergy_financial_os/distribution_execution_ticket_v3.py
+      - name: Run v3 handoff regressions
+        run: pytest -q tests/test_distribution_handoff_v3.py

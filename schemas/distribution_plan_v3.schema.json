@@ -1,0 +1,36 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"distribution.plan/v3",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema","plan_id","distribution_available_capacity_schema","distribution_available_capacity_digest","affected_period_id","distribution_currency","source_account_id","beneficiaries","beneficiary_set_digest","principal_total","external_fee_budget","total_authorized_outflow_ceiling","capacity_limit","usage_policy","fee_policy","capacity_policy","generated_at","authority","authorization_authority","payment_authority","execution_authority","ai_authority","digest"],
+  "properties":{
+    "schema":{"const":"distribution.plan/v3"},
+    "plan_id":{"type":"string","minLength":1},
+    "distribution_available_capacity_schema":{"const":"distribution.available-capacity/v3"},
+    "distribution_available_capacity_digest":{"$ref":"#/$defs/hex64"},
+    "affected_period_id":{"type":"string","minLength":1},
+    "distribution_currency":{"type":"string","minLength":1},
+    "source_account_id":{"type":"string","minLength":1},
+    "beneficiaries":{"type":"array","minItems":1,"items":{"type":"object"}},
+    "beneficiary_set_digest":{"$ref":"#/$defs/hex64"},
+    "principal_total":{"$ref":"#/$defs/decimal"},
+    "external_fee_budget":{"$ref":"#/$defs/decimal"},
+    "total_authorized_outflow_ceiling":{"$ref":"#/$defs/decimal"},
+    "capacity_limit":{"$ref":"#/$defs/decimal"},
+    "usage_policy":{"const":"SINGLE_EXACT_BATCH"},
+    "fee_policy":{"const":"PAYER_BORNE_SEPARATE_FROM_PRINCIPAL_UP_TO_BUDGET"},
+    "capacity_policy":{"const":"FEE_AWARE_BUDGET_STATE_V2_AVAILABLE_CAPACITY_V3_ONLY"},
+    "generated_at":{"type":"string","format":"date-time"},
+    "authority":{"const":"FINANCIAL_OS_DISTRIBUTION_PLAN_V3"},
+    "authorization_authority":{"const":"NONE"},
+    "payment_authority":{"const":"NONE"},
+    "execution_authority":{"const":"NONE"},
+    "ai_authority":{"const":"NONE"},
+    "digest":{"$ref":"#/$defs/hex64"}
+  },
+  "$defs":{
+    "hex64":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "decimal":{"type":"string","pattern":"^(0|[1-9][0-9]*)(\\.[0-9]+)?$"}
+  }
+}
