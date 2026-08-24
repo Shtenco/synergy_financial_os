@@ -1,0 +1,42 @@
+{
+  "schema":"sinergy.schema-registry/v28",
+  "as_of":"2026-08-24",
+  "base_registry":"config/schema_registry_v27.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V28 registers the Financial OS accounting consumer for MetaPay distribution v3 evidence. It requires the exact v3 Plan/Auth/Ticket lineage and MetaPay BatchAttempt/SettlementReceipt/Utilization v3. Principal remains external-capital owner distribution; only actually incurred payer-borne fee is realized external expense. Historical accounting v1/v2 remain immutable.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.batch-attempt/v3",
+      "status":"EXTERNAL_CONSUMED_DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os"],
+      "authority_note":"MetaPay execution attempt evidence only; authorization consumed once; accounting authority NONE."
+    },
+    {
+      "schema_id":"distribution.settlement-receipt/v3",
+      "status":"EXTERNAL_CONSUMED_DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os"],
+      "authority_note":"Terminal settlement evidence with exact principal and separately evidenced actual payer-borne fee. Financial OS remains accounting authority."
+    },
+    {
+      "schema_id":"distribution.utilization/v3",
+      "status":"EXTERNAL_CONSUMED_DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os"],
+      "authority_note":"Exact aggregate settlement utilization; unused fee budget is unutilized authorized capacity, never profit."
+    },
+    {
+      "schema_id":"distribution.fee-accounting-decision/v3",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain"],
+      "authority_note":"Independent Financial OS decision over exact MetaPay v3 evidence. Settled principal is OWNER_DISTRIBUTION/EXTERNAL_CAPITAL/P&L-excluded; actual fee is OWNER_DISTRIBUTION_SETTLEMENT_FEE/EXTERNAL_EXPENSE/realized external expense."
+    }
+  ]
+}
