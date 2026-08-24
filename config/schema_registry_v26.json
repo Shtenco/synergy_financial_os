@@ -1,0 +1,18 @@
+{
+  "schema": "sinergy.schema-registry/v26",
+  "as_of": "2026-08-24",
+  "base_registry": "config/schema_registry_v25.json",
+  "evolution_policy": "APPEND_ONLY_OVERLAY",
+  "policy": "V26 makes current distribution capacity consume fee-aware DistributionBudgetState v2 explicitly. Historical AvailableCapacity v2 remains immutable; the v3 path rejects BudgetState v1 and exposes gross profit budget, post-close settlement fees, fee-adjusted budget, net distributed amount and remaining entitlement before applying current HardNAV/liquidity headroom.",
+  "supersessions": [],
+  "additions": [
+    {
+      "schema_id": "distribution.available-capacity/v3",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergy_financial_os"],
+      "authority_note": "Non-authorizing fee-aware current distribution capacity. Requires distribution.budget-state/v2; final capacity=min(remaining fee-adjusted period budget,current HardNAV solvency headroom,current liquidity headroom) unless blockers. No authorization/payment/execution/AI authority."
+    }
+  ]
+}
