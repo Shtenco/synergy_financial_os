@@ -1,0 +1,20 @@
+name: distribution-reversal-accounting-v2
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/distribution_reversal_accounting_v2.py'
+      - 'tests/test_distribution_reversal_accounting_v2.py'
+      - 'schemas/distribution_reversal_accounting_decision_v2.schema.json'
+      - 'config/schema_registry_v29.json'
+      - 'docs/DISTRIBUTION_REVERSAL_ACCOUNTING_V2_FEE_REFUND_20260828.md'
+      - '.github/workflows/distribution-reversal-accounting-v2.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e . pytest jsonschema
+      - run: pytest -q tests/test_distribution_reversal_accounting_v2.py
