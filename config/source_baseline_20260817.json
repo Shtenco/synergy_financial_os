@@ -1,0 +1,67 @@
+{
+  "schema": "sinergy.source-baseline/v1",
+  "as_of": "2026-08-17",
+  "note": "Snapshot of source repositories/refs used during the first canonical federation pass. Later updates must create a new baseline instead of rewriting historical provenance.",
+  "sources": [
+    {
+      "repository": "Shtenco/ai_financial_system",
+      "ref": "main",
+      "commit": "816bf579c35e071ab8410b40a9a071817e9090b4",
+      "role": "financial-rnd-main"
+    },
+    {
+      "repository": "Shtenco/ai_financial_system",
+      "ref": "feat/financial-os-v4-20260809",
+      "commit": "3f05295ada1cb894c31100afa40c2c387a4cbbcd",
+      "role": "financial-os-v4-v5-canonical-candidate"
+    },
+    {
+      "repository": "Shtenco/synergy_pay_system",
+      "ref": "main",
+      "commit": "8045612ec721f318182a0067faa0b528d099c73b",
+      "role": "metapay-settlement-main"
+    },
+    {
+      "repository": "Shtenco/synergy_pay_system",
+      "ref": "feat/metapay-v2-20260809",
+      "commit": "55e7c6ab6951845baa882357c146d83a6d254c4f",
+      "role": "metapay-v2-canonical-candidate"
+    },
+    {
+      "repository": "Shtenco/synergychain",
+      "ref": "main",
+      "commit": "5e8ddb57b4b75ef422ab5789e2373c16f853c0ec",
+      "role": "growth-os-v7-control-plane-main"
+    },
+    {
+      "repository": "Shtenco/synergychain",
+      "ref": "feat/financial-os-v8-20260809",
+      "commit": "9691325f02a5c9a6a1b00b91b623acb8e77433a4",
+      "role": "financial-os-v8-control-plane-candidate"
+    },
+    {
+      "repository": "Shtenco/agi_olga",
+      "ref": "main",
+      "commit": "252d6c221a202bbc57dc708d516c6dd8a00c8826",
+      "role": "olga-nexus-intelligence-main"
+    },
+    {
+      "repository": "Shtenco/ai_compress",
+      "ref": "main",
+      "commit": "31e087530a61c05e6ff23e554f13f5b7bc1d35d7",
+      "role": "lossless-memory-archive-main"
+    },
+    {
+      "repository": "Shtenco/usds",
+      "ref": "main",
+      "commit": "a5cf6cb65f89dd57b356a3af3af52590a5b8dbe3",
+      "role": "usds-research-main"
+    },
+    {
+      "repository": "Shtenco/cashero",
+      "ref": "main",
+      "commit": "fd1d862094f868a7ceb0b6bf64007c551d6d55a0",
+      "role": "legacy-cyclic-liquidity-lineage"
+    }
+  ]
+}

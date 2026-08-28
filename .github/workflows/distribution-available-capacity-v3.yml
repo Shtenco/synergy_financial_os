@@ -1,0 +1,30 @@
+name: Distribution Available Capacity v3
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/distribution_available_capacity_v3.py'
+      - 'schemas/distribution_available_capacity_v3.schema.json'
+      - 'tests/test_distribution_available_capacity_v3.py'
+      - 'config/schema_registry_v26.json'
+      - 'docs/DISTRIBUTION_AVAILABLE_CAPACITY_V3_FEE_AWARE_20260824.md'
+      - '.github/workflows/distribution-available-capacity-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install package and test dependencies
+        run: python -m pip install -e . pytest jsonschema
+      - name: Compile v3 module
+        run: python -m compileall -q sinergy_financial_os/distribution_available_capacity_v3.py
+      - name: Run v3 regressions
+        run: pytest -q tests/test_distribution_available_capacity_v3.py

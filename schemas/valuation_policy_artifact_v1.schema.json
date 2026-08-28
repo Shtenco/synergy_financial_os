@@ -1,0 +1,34 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.local/schemas/valuation_policy_artifact_v1.schema.json",
+  "title":"SINERGY ValuationPolicyArtifact v1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema","policy","valuation_policy_digest","generated_at","authority","valuation_authority","execution_authority","digest"],
+  "properties":{
+    "schema":{"const":"valuation.policy-artifact/v1"},
+    "policy":{"type":"object","additionalProperties":false,"required":["schema","policy_id","reporting_currency","as_of","rules"],"properties":{
+      "schema":{"const":"valuation-policy/v1"},
+      "policy_id":{"type":"string","minLength":1},
+      "reporting_currency":{"type":"string","minLength":1},
+      "as_of":{"type":"string","minLength":1},
+      "rules":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["valuation_class","hard_factor","liquid_factor","economic_factor","price_source_class","max_staleness_seconds","requires_external_enforceability","requires_intragroup_elimination","notes"],"properties":{
+        "valuation_class":{"type":"string","minLength":1},
+        "hard_factor":{"type":"string","pattern":"^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"},
+        "liquid_factor":{"type":"string","pattern":"^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"},
+        "economic_factor":{"type":"string","pattern":"^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"},
+        "price_source_class":{"enum":["PAR","BANK_BALANCE","AUDITED_NAV","EXECUTABLE_MARKET","ORACLE","MODEL","NONE"]},
+        "max_staleness_seconds":{"type":["integer","null"],"minimum":0,"maximum":9007199254740991},
+        "requires_external_enforceability":{"type":"boolean"},
+        "requires_intragroup_elimination":{"type":"boolean"},
+        "notes":{"type":["string","null"]}
+      }}}
+    }},
+    "valuation_policy_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "generated_at":{"type":"string","pattern":"^.+Z$"},
+    "authority":{"const":"FINANCIAL_OS_VALUATION_POLICY_ARTIFACT"},
+    "valuation_authority":{"const":"REFERENCE_ONLY"},
+    "execution_authority":{"const":"NONE"},
+    "digest":{"type":"string","pattern":"^[0-9a-f]{64}$"}
+  }
+}

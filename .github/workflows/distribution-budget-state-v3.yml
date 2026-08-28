@@ -1,0 +1,20 @@
+name: distribution-budget-state-v3
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/distribution_budget_state_v3.py'
+      - 'tests/test_distribution_budget_state_v3.py'
+      - 'schemas/distribution_budget_state_v3.schema.json'
+      - 'config/schema_registry_v30.json'
+      - 'docs/DISTRIBUTION_BUDGET_STATE_V3_FEE_REFUND_RESTORATION_20260828.md'
+      - '.github/workflows/distribution-budget-state-v3.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e . pytest jsonschema
+      - run: pytest -q tests/test_distribution_budget_state_v3.py

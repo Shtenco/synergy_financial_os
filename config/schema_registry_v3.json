@@ -1,0 +1,47 @@
+{
+  "schema": "sinergy.schema-registry/v3",
+  "as_of": "2026-08-18",
+  "base_registry": "config/schema_registry_v2.json",
+  "evolution_policy": "APPEND_ONLY_OVERLAY",
+  "policy": "V3 does not rewrite V2. It records supersession and new schema authorities as an additive overlay. Base-registry entries not named here retain their V2 meaning.",
+  "supersessions": [
+    {
+      "schema_id": "capital.authorization/v1",
+      "new_status": "SUPERSEDED_DRAFT",
+      "superseded_by": "capital.authorization/v2",
+      "reason": "V2 binds exact funding source, destination, payment idempotency key, purpose and approver-policy digest."
+    },
+    {
+      "schema_id": "economic.cycle-trace/v1",
+      "new_status": "SUPERSEDED_DRAFT",
+      "superseded_by": "economic.cycle-trace/v2",
+      "reason": "V2 requires destination-bound capital.authorization/v2 in the authorization phase."
+    }
+  ],
+  "additions": [
+    {
+      "schema_id": "capital.authorization/v2",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": [
+        "Shtenco/synergy_pay_system",
+        "Shtenco/synergychain",
+        "Shtenco/synergy_ai_blockchain"
+      ],
+      "authority_note": "Human/multisig capital decision only. Exact payer, payee, asset, amount, idempotency key and purpose are bound. AI cannot authorize and payment execution remains MetaPay-owned."
+    },
+    {
+      "schema_id": "economic.cycle-trace/v2",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": [
+        "Shtenco/synergychain",
+        "Shtenco/synergy_ai_blockchain",
+        "Shtenco/ai_language"
+      ],
+      "authority_note": "Provenance-only nine-phase causal trace using capital.authorization/v2. It cannot execute transactions or recognize profit."
+    }
+  ]
+}

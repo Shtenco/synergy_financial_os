@@ -1,0 +1,55 @@
+name: economic-cycle-trace-v1
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/capital_authorization.py'
+      - 'sinergy_financial_os/economic_cycle_trace.py'
+      - 'schemas/capital_authorization_v1.schema.json'
+      - 'schemas/economic_cycle_trace_v1.schema.json'
+      - 'config/schema_registry_v2.json'
+      - 'fixtures/conformance/capital_authorization_v1_canonical.json'
+      - 'fixtures/conformance/economic_cycle_trace_v1_complete.json'
+      - 'tests/test_capital_authorization.py'
+      - 'tests/test_capital_authorization_schema.py'
+      - 'tests/test_capital_authorization_conformance.py'
+      - 'tests/test_economic_cycle_trace.py'
+      - 'tests/test_economic_cycle_trace_schema.py'
+      - 'tests/test_economic_cycle_trace_conformance.py'
+      - 'tests/test_economic_cycle_schema_registry.py'
+      - 'docs/CAPITAL_AUTHORIZATION_AND_ECONOMIC_CYCLE_TRACE_V1_20260818.md'
+      - '.github/workflows/economic-cycle-trace-v1.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: economic-cycle-trace-v1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  causal-trace:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Compile new cycle modules
+        run: >-
+          python -m py_compile
+          sinergy_financial_os/capital_authorization.py
+          sinergy_financial_os/economic_cycle_trace.py
+      - name: Run capital authorization and trace regressions
+        run: >-
+          python -m pytest
+          tests/test_capital_authorization.py
+          tests/test_capital_authorization_schema.py
+          tests/test_capital_authorization_conformance.py
+          tests/test_economic_cycle_trace.py
+          tests/test_economic_cycle_trace_schema.py
+          tests/test_economic_cycle_trace_conformance.py
+          tests/test_economic_cycle_schema_registry.py
+          -q

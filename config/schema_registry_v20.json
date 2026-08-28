@@ -1,0 +1,42 @@
+{
+  "schema":"sinergy.schema-registry/v20",
+  "as_of":"2026-08-20",
+  "base_registry":"config/schema_registry_v19.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V20 registers MetaPay one-time distribution execution evidence and Financial OS owner-distribution accounting. Only actually SETTLED beneficiary legs may reduce cash/equity. Owner distributions are signed EXTERNAL_CAPITAL outflows and are excluded from realized P&L.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.batch-attempt/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"MetaPay one-time exact-batch attempt. DistributionAuthorization is consumed when this attempt is created, before settlement, to prevent replay after partial success. Attempt has no accounting authority."
+    },
+    {
+      "schema_id":"distribution.settlement-receipt/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Terminal per-beneficiary exact same-currency settlement evidence bound to Plan/Auth/Ticket/Attempt. V1 permits zero payer-borne external fee only; profit recognition is NOT_PERFORMED."
+    },
+    {
+      "schema_id":"distribution.utilization/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"MetaPay terminal batch utilization over exactly one terminal receipt per beneficiary. FULL/PARTIAL/FAILED states all retain authorization_consumption=CONSUMED; partial remainder requires new Plan/Authorization."
+    },
+    {
+      "schema_id":"distribution.accounting-decision/v1",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain","Shtenco/ai_language"],
+      "authority_note":"Financial OS decision binding raw MetaPay attempt/utilization/receipt evidence to an explicit operational-source -> ReportingLedger cash-account mapping. Only SETTLED total is POSTABLE. Canonical posting is EXTERNAL_CAPITAL owner-distribution outflow and excluded from realized P&L. Decision itself cannot mutate ledger."
+    }
+  ]
+}

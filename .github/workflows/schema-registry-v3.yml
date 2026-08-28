@@ -1,0 +1,29 @@
+name: schema-registry-v3
+
+on:
+  pull_request:
+    paths:
+      - 'config/schema_registry_v2.json'
+      - 'config/schema_registry_v3.json'
+      - 'tests/test_schema_registry_v3.py'
+      - '.github/workflows/schema-registry-v3.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: schema-registry-v3-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  registry-overlay:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+      - name: Validate append-only registry evolution
+        run: python -m pytest tests/test_schema_registry_v3.py -q

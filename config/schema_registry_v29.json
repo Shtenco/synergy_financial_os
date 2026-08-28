@@ -1,0 +1,26 @@
+{
+  "schema":"sinergy.schema-registry/v29",
+  "as_of":"2026-08-28",
+  "base_registry":"config/schema_registry_v28.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V29 registers MetaPay settlement-reversal/v2 and Financial OS reversal-accounting-decision/v2. Principal recovery, refund of a previously recognized settlement-fee expense, and any new reversal-processing fee are separate economic flows. Reversal never revives consumed distribution authorization.",
+  "supersessions":[],
+  "additions":[
+    {
+      "schema_id":"distribution.settlement-reversal/v2",
+      "status":"EXTERNAL_CONSUMED_DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_pay_system",
+      "producer":"Shtenco/synergy_pay_system",
+      "consumers":["Shtenco/synergy_financial_os"],
+      "authority_note":"Settlement reversal evidence only. Exact returned principal, separately evidenced original-fee refund, separately evidenced new processing fee; authorization remains consumed; no accounting/profit/execution authority."
+    },
+    {
+      "schema_id":"distribution.reversal-accounting-decision/v2",
+      "status":"DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority":"Shtenco/synergy_financial_os",
+      "producer":"Shtenco/synergy_financial_os",
+      "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_ai_blockchain","Shtenco/synergychain"],
+      "authority_note":"Financial OS independently re-verifies v3 original settlement/accounting and MetaPay reversal v2. Principal recovery is EXTERNAL_CAPITAL/P&L-excluded; original-fee refund is a credit to external expense and restores realized P&L; new reversal-processing fee is a new EXTERNAL_EXPENSE."
+    }
+  ]
+}

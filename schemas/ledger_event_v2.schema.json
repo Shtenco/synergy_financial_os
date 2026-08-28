@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sinergy.system/schemas/ledger.event/v2",
+  "title": "SINERGY LedgerEvent v2",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "hex64": {"type":"string","pattern":"^[a-fA-F0-9]{64}$"},
+    "decimal": {"type":"string","pattern":"^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"}
+  },
+  "required": ["schema","event_id","sequence","event_type","effective_at","reporting_currency","lines","evidence_class","external_reference","evidence_digest","metadata","previous_reporting_entry_digest","reporting_entry_digest"],
+  "properties": {
+    "schema": {"const":"ledger.event/v2"},
+    "event_id": {"type":"string","minLength":1},
+    "sequence": {"type":"integer","minimum":1,"maximum":9007199254740991},
+    "event_type": {"type":"string","minLength":1},
+    "effective_at": {"type":"string","pattern":"Z$"},
+    "reporting_currency": {"type":"string","minLength":1,"maxLength":16},
+    "lines": {
+      "type":"array","minItems":2,
+      "items": {
+        "type":"object","additionalProperties":false,
+        "required":["account","currency","debit","credit"],
+        "properties": {
+          "account":{"type":"string","minLength":1},
+          "currency":{"type":"string","minLength":1,"maxLength":16},
+          "debit":{"$ref":"#/$defs/decimal"},
+          "credit":{"$ref":"#/$defs/decimal"}
+        }
+      }
+    },
+    "evidence_class": {"enum":["INTERNAL","BANK","PSP","CEX_FILL","DEX_RECEIPT","BLOCKCHAIN_FINALITY","CBDC","MERCHANT","PROJECT","AUDITED","OTHER"]},
+    "external_reference": {"type":"string","minLength":1},
+    "evidence_digest": {"$ref":"#/$defs/hex64"},
+    "metadata": {"type":"object","additionalProperties":{"type":"string"}},
+    "previous_reporting_entry_digest": {"$ref":"#/$defs/hex64"},
+    "reporting_entry_digest": {"$ref":"#/$defs/hex64"}
+  }
+}

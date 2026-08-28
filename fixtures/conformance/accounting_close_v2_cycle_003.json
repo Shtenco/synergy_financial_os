@@ -1,0 +1,20 @@
+{
+  "schema": "accounting.close/v2",
+  "close_id": "close-cycle-003-v2",
+  "snapshot_schema": "financial.snapshot/v2",
+  "financial_snapshot_digest": "cc90650d55d69b6e2066c00f2590e2faf7b991de75fb3d277a1da7b8d741ae1b",
+  "snapshot_sequence": 1,
+  "snapshot_ledger_digest": "6393c6430b621d0418287007af3334310fa0b0dad6a68ff84e486f26712d9482",
+  "snapshot_ledger_last_entry_digest": "f38f6ce7c8a23bea46b95681b21aa490af7b8b1797252ec6645f76c2c3eb6086",
+  "account_registry_digest": "95ecf0a570c3612899e260a2ad4207e26ccbaa178c00f7acbde5f11920e5cc56",
+  "ledger_event_schema": "ledger.event/v2",
+  "ledger_root": "5eda2173d5f523d73f0f18d84301538a5dcab8e3c8fe15b128b261482a68590d",
+  "event_count": 1,
+  "closed_at": "2026-08-19T11:05:00Z",
+  "valuation_policy_digest": "12357e94f201e43412b1299fc2749d84decf2abc9df892e9d28686a07f83bfcd",
+  "requirement_registry_digest": "7777777777777777777777777777777777777777777777777777777777777777",
+  "authority": "FINANCIAL_OS_ACCOUNTING_CLOSE",
+  "profit_recognition": "REFERENCE_ONLY",
+  "execution_authority": "NONE",
+  "digest": "aa880abd2c32fd4ef6a6360e46ea802f224d91e66f3154f5ae175f60796d6617"
+}

@@ -1,0 +1,55 @@
+name: revenue-recognition-trace-v4
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/revenue_recognition_v*.py'
+      - 'sinergy_financial_os/revenue_posting_v2.py'
+      - 'sinergy_financial_os/authorized_revenue_posting_v2.py'
+      - 'sinergy_financial_os/ledger_event_export_v1.py'
+      - 'sinergy_financial_os/economic_cycle_trace_v4.py'
+      - 'schemas/revenue_recognition_v2.schema.json'
+      - 'schemas/economic_cycle_trace_v4.schema.json'
+      - 'fixtures/conformance/revenue_recognition_v2_canonical.json'
+      - 'fixtures/conformance/ledger_event_v1_recognized_revenue.json'
+      - 'fixtures/conformance/economic_cycle_trace_v4_complete.json'
+      - 'config/schema_registry_v5.json'
+      - 'tests/test_revenue_recognition_v2.py'
+      - 'tests/test_revenue_accounting_trace_v4.py'
+      - 'tests/test_schema_registry_v5.py'
+      - 'docs/REVENUE_RECOGNITION_AND_ACCOUNTING_TRACE_V4_20260818.md'
+      - '.github/workflows/revenue-recognition-trace-v4.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: revenue-recognition-trace-v4-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  revenue-accounting-v4:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest jsonschema
+      - name: Compile new accounting modules
+        run: >-
+          python -m py_compile
+          sinergy_financial_os/revenue_recognition_v1.py
+          sinergy_financial_os/revenue_recognition_v2.py
+          sinergy_financial_os/revenue_posting_v2.py
+          sinergy_financial_os/authorized_revenue_posting_v2.py
+          sinergy_financial_os/ledger_event_export_v1.py
+          sinergy_financial_os/economic_cycle_trace_v4.py
+      - name: Run recognition, posting, trace and registry regressions
+        run: >-
+          python -m pytest
+          tests/test_revenue_recognition_v2.py
+          tests/test_revenue_accounting_trace_v4.py
+          tests/test_schema_registry_v5.py
+          -q

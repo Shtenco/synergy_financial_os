@@ -1,0 +1,30 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.local/schemas/accounting_restatement_overlay_v1.schema.json",
+  "title":"SINERGY AccountingRestatementOverlay v1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema","overlay_id","affected_period_id","correction_target_period_id","original_period_close_digest","original_accounting_close_digest","original_ledger_event_digest","original_reporting_entry_digest","correction_authorization_digest","period_chain_proof_digest","correction_period_close_digest","correction_accounting_close_digest","correction_ledger_event_digest","correction_reporting_entry_digest","presentation_action","generated_at","authority","original_history_mutation","execution_authority","digest"],
+  "properties":{
+    "schema":{"const":"accounting.restatement-overlay/v1"},
+    "overlay_id":{"type":"string","minLength":1},
+    "affected_period_id":{"type":"string","minLength":1},
+    "correction_target_period_id":{"type":"string","minLength":1},
+    "original_period_close_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "original_accounting_close_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "original_ledger_event_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "original_reporting_entry_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "correction_authorization_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "period_chain_proof_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "correction_period_close_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "correction_accounting_close_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "correction_ledger_event_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "correction_reporting_entry_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "presentation_action":{"const":"EXCLUDE_ORIGINAL_ENTRY"},
+    "generated_at":{"type":"string","pattern":"^.+Z$"},
+    "authority":{"const":"FINANCIAL_OS_PRESENTATION_ONLY"},
+    "original_history_mutation":{"const":"NONE"},
+    "execution_authority":{"const":"NONE"},
+    "digest":{"type":"string","pattern":"^[0-9a-f]{64}$"}
+  }
+}

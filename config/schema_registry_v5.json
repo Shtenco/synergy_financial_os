@@ -1,0 +1,55 @@
+{
+  "schema": "sinergy.schema-registry/v5",
+  "as_of": "2026-08-18",
+  "base_registry": "config/schema_registry_v4.json",
+  "evolution_policy": "APPEND_ONLY_OVERLAY",
+  "policy": "V5 preserves all earlier generations and promotes a separately evidenced revenue-recognition/accounting chain. A settled payment alone remains insufficient for external revenue recognition.",
+  "lineage_notes": [
+    {
+      "artifact": "sinergy_financial_os/revenue_recognition_v1.py",
+      "status": "PRESERVED_UNPROMOTED_DRAFT",
+      "superseded_by": "revenue.recognition/v2",
+      "reason": "V2 separates project evidence from delivery evidence and binds exact payer, revenue destination, invoice ceiling and accounting-policy evidence."
+    }
+  ],
+  "supersessions": [
+    {
+      "schema_id": "economic.cycle-trace/v3",
+      "new_status": "SUPERSEDED_DRAFT",
+      "superseded_by": "economic.cycle-trace/v4",
+      "reason": "V4 inserts explicit RevenueRecognition v2 and LedgerEvent v1 phases before FinancialSnapshot and moves latest trust reference to CommitmentEnvelope v3."
+    },
+    {
+      "schema_id": "commitment.envelope/v2",
+      "new_status": "SUPERSEDED_DRAFT",
+      "superseded_by": "commitment.envelope/v3",
+      "reason": "V3 commits an explicit immutable schema-policy profile and enforces latest-by-default creation."
+    }
+  ],
+  "additions": [
+    {
+      "schema_id": "revenue.recognition/v2",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergy_financial_os", "Shtenco/synergychain", "Shtenco/synergy_ai_blockchain", "Shtenco/ai_language"],
+      "authority_note": "Financial OS pre-ledger accounting decision. Requires SettlementReceipt v2 lineage plus external counterparty, contract, invoice, delivery/performance, dispute/refund, tax and FX policy evidence. AI cannot recognize revenue and the decision cannot post the ledger itself."
+    },
+    {
+      "schema_id": "economic.cycle-trace/v4",
+      "status": "DRAFT_CANONICAL_CANDIDATE",
+      "schema_authority": "Shtenco/synergy_financial_os",
+      "producer": "Shtenco/synergy_financial_os",
+      "consumers": ["Shtenco/synergychain", "Shtenco/synergy_ai_blockchain", "Shtenco/ai_language"],
+      "authority_note": "Provenance graph including explicit revenue recognition and ledger event. It references recognized accounting but does not itself create postings or execute transactions."
+    },
+    {
+      "schema_id": "commitment.envelope/v3",
+      "status": "DRAFT_DOMAIN_SCHEMA",
+      "schema_authority": "Shtenco/synergy_ai_blockchain",
+      "producer": "Shtenco/synergy_ai_blockchain",
+      "consumers": ["Shtenco/synergy_ai_blockchain", "Shtenco/synergychain"],
+      "authority_note": "Typed exact-byte commitment with explicit schema-policy generation; no financial approval, settlement or accounting authority."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schema":"economic.cycle-trace/v5",
+  "cycle_id":"cycle-005",
+  "household_or_funding_subject":"cohort-001",
+  "project_id":"project-001",
+  "status":"TRACE_COMPLETE",
+  "complete":true,
+  "missing_phases":[],
+  "references":[
+    {"phase":"FUNDING_STATE","schema_id":"maturity.snapshot/v1","digest":"0101010101010101010101010101010101010101010101010101010101010101","source_repository":"Shtenco/synergy_matrix_sota","subject_id":"cohort-001","observed_at":"2026-08-18T17:00:00Z"},
+    {"phase":"PROJECT_PROPOSAL","schema_id":"project.proposal/v2","digest":"0202020202020202020202020202020202020202020202020202020202020202","source_repository":"Shtenco/synergy_eurasian","subject_id":"project-001","observed_at":"2026-08-18T17:30:00Z"},
+    {"phase":"PROJECT_SCREENING","schema_id":"project.screening/v1","digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","source_repository":"Shtenco/synergy_financial_os","subject_id":"project-001","observed_at":"2026-08-18T18:30:00Z"},
+    {"phase":"CAPITAL_AUTHORIZATION","schema_id":"capital.authorization/v2","digest":"1e814153a18850865543e08b498b60d9bce80dbd34bfb2f4c378f3fe502fe89f","source_repository":"Shtenco/synergy_financial_os","subject_id":"project-001","observed_at":"2026-08-18T19:00:00Z"},
+    {"phase":"FUNDING_SETTLEMENT","schema_id":"settlement.receipt/v2","digest":"cedcfe564fed28c5902cbed40361e9924afc8ccaa9f5d535b5b35cc019f06588","source_repository":"Shtenco/synergy_pay_system","subject_id":"00000000-0000-0000-0000-000000000301","observed_at":"2026-08-18T19:31:00Z"},
+    {"phase":"PROJECT_EVIDENCE","schema_id":"project.evidence/v1","digest":"6666666666666666666666666666666666666666666666666666666666666666","source_repository":"Shtenco/synergy_eurasian","subject_id":"project-001","observed_at":"2026-08-19T09:00:00Z"},
+    {"phase":"REVENUE_SETTLEMENT","schema_id":"settlement.receipt/v2","digest":"cd3a1886789eb431dde2b06feb4236bcf0f5d6f97f327de9204ec437fb8222e8","source_repository":"Shtenco/synergy_pay_system","subject_id":"00000000-0000-0000-0000-000000000302","observed_at":"2026-08-19T10:01:00Z"},
+    {"phase":"REVENUE_RECOGNITION","schema_id":"revenue.recognition/v2","digest":"422f66737f129a3b714c16a1212287dc0ccf243efa51c4ce1a7eb65cd56fbfa3","source_repository":"Shtenco/synergy_financial_os","subject_id":"project-001","observed_at":"2026-08-19T10:30:00Z"},
+    {"phase":"LEDGER_EVENT","schema_id":"ledger.event/v1","digest":"1dcf75a6084615c4a8c3dcdcf04a820ee25311900a7a4f5ade858e6711263771","source_repository":"Shtenco/synergy_financial_os","subject_id":"revenue-event-001","observed_at":"2026-08-19T10:30:00Z"},
+    {"phase":"ACCOUNTING_SNAPSHOT","schema_id":"financial.snapshot/v2","digest":"0808080808080808080808080808080808080808080808080808080808080808","source_repository":"Shtenco/synergy_financial_os","subject_id":"financial-snapshot-001","observed_at":"2026-08-19T11:00:00Z"}
+  ],
+  "authority":"PROVENANCE_ONLY",
+  "profit_recognition":"REFERENCE_ONLY",
+  "execution_authority":"NONE",
+  "trust_finalization":"EXTERNAL_COMMITMENT_REQUIRED",
+  "digest":"0182bbf05b7dc11690adf899bd6e3b353df47b3e2146c3629669693167dacfca"
+}

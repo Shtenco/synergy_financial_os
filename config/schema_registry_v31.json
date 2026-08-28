@@ -1,0 +1,16 @@
+{
+  "schema":"sinergy.schema-registry/v31",
+  "as_of":"2026-08-28",
+  "base_registry":"config/schema_registry_v30.json",
+  "evolution_policy":"APPEND_ONLY_OVERLAY",
+  "policy":"V31 exposes current distributable capacity after BudgetState v3 has accounted for canonical fee refunds and reversal-processing fees. Historical AvailableCapacity v2/v3 remains immutable.",
+  "supersessions":[],
+  "additions":[{
+    "schema_id":"distribution.available-capacity/v4",
+    "status":"DRAFT_CANONICAL_CANDIDATE",
+    "schema_authority":"Shtenco/synergy_financial_os",
+    "producer":"Shtenco/synergy_financial_os",
+    "consumers":["Shtenco/synergy_financial_os","Shtenco/synergy_system"],
+    "authority_note":"Accepts only distribution.budget-state/v3. Final capacity remains min(restored remaining period entitlement, current HardNAV solvency headroom, current liquidity distribution capacity), or zero under blockers. No authorization/payment/execution/AI authority."
+  }]
+}

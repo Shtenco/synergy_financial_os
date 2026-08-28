@@ -1,0 +1,32 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.local/schemas/prior_period_correction_authorization_v1.schema.json",
+  "title":"SINERGY PriorPeriodCorrectionAuthorization v1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema","authorization_id","affected_period_id","target_period_id","reason","correction_scope","current_period_pnl_treatment","original_period_close_digest","original_accounting_close_digest","original_ledger_event_digest","original_reporting_entry_digest","period_chain_proof_digest","correction_evidence_digest","decision_evidence_digest","accounting_policy_digest","requirement_registry_digest","decision_authority","decided_at","effective_at","posting_authority","ai_authority","digest"],
+  "properties":{
+    "schema":{"const":"accounting.prior-period-correction-authorization/v1"},
+    "authorization_id":{"type":"string","minLength":1},
+    "affected_period_id":{"type":"string","minLength":1},
+    "target_period_id":{"type":"string","minLength":1},
+    "reason":{"enum":["DUPLICATE_ENTRY","ERRONEOUS_RECOGNITION","MISCLASSIFIED_ENTRY","DATA_ERROR"]},
+    "correction_scope":{"const":"EXACT_ENTRY_VOID"},
+    "current_period_pnl_treatment":{"const":"EXCLUDED_FROM_CURRENT_PERIOD_PNL"},
+    "original_period_close_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "original_accounting_close_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "original_ledger_event_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "original_reporting_entry_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "period_chain_proof_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "correction_evidence_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "decision_evidence_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "accounting_policy_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "requirement_registry_digest":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "decision_authority":{"enum":["HUMAN_COMMITTEE","MULTISIG_GOVERNANCE"]},
+    "decided_at":{"type":"string","pattern":"^.+Z$"},
+    "effective_at":{"type":"string","pattern":"^.+Z$"},
+    "posting_authority":{"const":"SEPARATE_CORRECTION_POSTING"},
+    "ai_authority":{"const":"NONE"},
+    "digest":{"type":"string","pattern":"^[0-9a-f]{64}$"}
+  }
+}

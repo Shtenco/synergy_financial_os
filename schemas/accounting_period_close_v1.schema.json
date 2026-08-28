@@ -1,0 +1,11 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://sinergy.system/schemas/accounting.period-close/v1",
+  "title":"SINERGY AccountingPeriodClose v1",
+  "type":"object","additionalProperties":false,
+  "$defs":{"hex64":{"type":"string","pattern":"^[a-fA-F0-9]{64}$"}},
+  "required":["schema","period_id","accounting_period_digest","accounting_close_digest","financial_snapshot_digest","previous_period_close_digest","adjustment_authorization_digests","closed_at","authority","execution_authority","digest"],
+  "properties":{
+    "schema":{"const":"accounting.period-close/v1"},"period_id":{"type":"string","minLength":1},"accounting_period_digest":{"$ref":"#/$defs/hex64"},"accounting_close_digest":{"$ref":"#/$defs/hex64"},"financial_snapshot_digest":{"$ref":"#/$defs/hex64"},"previous_period_close_digest":{"oneOf":[{"$ref":"#/$defs/hex64"},{"type":"null"}]},"adjustment_authorization_digests":{"type":"array","items":{"$ref":"#/$defs/hex64"},"uniqueItems":true},"closed_at":{"type":"string","pattern":"Z$"},"authority":{"const":"FINANCIAL_OS_PERIOD_CLOSE"},"execution_authority":{"const":"NONE"},"digest":{"$ref":"#/$defs/hex64"}
+  }
+}

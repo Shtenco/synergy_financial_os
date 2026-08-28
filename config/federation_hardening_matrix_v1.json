@@ -1,0 +1,144 @@
+{
+  "schema": "sinergy.federation-hardening-matrix/v1",
+  "as_of": "2026-08-17",
+  "verification_rule": "HARDEN-* identifies a draft engineering control, not a canonical requirement. ADDRESSED means implementation/schema/tests exist on the named draft branch. A control is not VERIFIED until the configured runner executes the mapped tests successfully. canonical_requirement_refs may contain only IDs present in config/requirement_registry_v1.json.",
+  "controls": [
+    {
+      "control_id": "HARDEN-FIN-SNAPSHOT-001",
+      "canonical_requirement_refs": ["REQ-FIN-004", "REQ-FIN-006", "REQ-FIN-009"],
+      "repository": "Shtenco/synergy_financial_os",
+      "branch": "test-bootstrap",
+      "statement": "FinancialSnapshot v2 must reject non-finite or cross-language-unsafe numeric inputs, enforce its existing accounting invariants before hashing, serialize economic decimals into one canonical textual representation, and match the shared Python/Node conformance fixture.",
+      "implementation": [
+        "sinergy_financial_os/numeric.py",
+        "sinergy_financial_os/snapshot.py",
+        "schemas/financial_snapshot_v2.schema.json",
+        "fixtures/conformance/financial_snapshot_v2_canonical.json"
+      ],
+      "tests": [
+        "tests/test_snapshot_v2.py",
+        "tests/test_snapshot_v2_direct_validation.py",
+        "tests/test_snapshot_v2_conformance_fixture.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-FIN-VALUATION-001",
+      "canonical_requirement_refs": ["REQ-FIN-006"],
+      "repository": "Shtenco/synergy_financial_os",
+      "branch": "test-bootstrap",
+      "statement": "ValuationPolicy must exist as a digest-bound, timezone-aware, rule-order-independent primitive; valuation factors must be finite and price-source classes closed before a FinancialSnapshot can bind their digest.",
+      "implementation": [
+        "sinergy_financial_os/valuation.py",
+        "schemas/valuation_policy_v1.schema.json"
+      ],
+      "tests": [
+        "tests/test_valuation.py",
+        "tests/test_valuation_policy.py",
+        "tests/test_public_api.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-MAT-001",
+      "canonical_requirement_refs": ["REQ-MAT-003", "REQ-MAT-004", "REQ-FIN-009"],
+      "repository": "Shtenco/synergy_matrix_sota",
+      "branch": "feat/canonical-household-capital-os-20260817",
+      "statement": "MaturitySnapshot v1 must preserve the contractual maturity curve while separately exporting a non-callable curve so immediately callable principal is not counted again in future LCR outflows; one snapshot remains single-denomination and decimal values are canonical.",
+      "implementation": [
+        "sinergy_matrix_sota/core.py",
+        "sinergy_matrix_sota/snapshot.py",
+        "fixtures/conformance/maturity_snapshot_v1_callable_term_locked.json"
+      ],
+      "tests": [
+        "tests/test_numeric_safety.py",
+        "tests/test_snapshot.py",
+        "tests/test_maturity_v1_conformance_fixture.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-PAY-001",
+      "canonical_requirement_refs": ["REQ-PAY-001", "REQ-PAY-002", "REQ-PAY-003", "REQ-FIN-008"],
+      "repository": "Shtenco/synergy_pay_system",
+      "branch": "docs/financial-os-federation-boundary-20260817",
+      "statement": "SettlementReceipt v1 must export only observed fees, require an explicit closed economic_role for every fee, use canonical finite decimal text, preserve final route/output facts, and never classify payment principal/notional as fee P&L.",
+      "implementation": [
+        "src/synergy_pay/financial_os_adapter.py",
+        "fixtures/conformance/settlement_receipt_v1_kzt_cny.json"
+      ],
+      "tests": [
+        "tests/test_financial_os_adapter.py",
+        "tests/test_settlement_v1_conformance_fixture.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-EUR-001",
+      "canonical_requirement_refs": ["REQ-EUR-001"],
+      "repository": "Shtenco/synergy_eurasian",
+      "branch": "feat/eiiom-real-economy-os-20260817",
+      "statement": "ProjectProposal v2 must preserve v1 for provenance while exporting fractional economics as canonical decimal strings and rejecting non-finite floats or unsafe integers from content-addressed federation payloads.",
+      "implementation": [
+        "sinergy_eurasian/project.py",
+        "schemas/project_proposal_v2.schema.json",
+        "fixtures/conformance/project_proposal_v2_kz_energy_pilot.json"
+      ],
+      "tests": [
+        "tests/test_project_v2.py",
+        "tests/test_project_v2_conformance_fixture.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-AI-001",
+      "canonical_requirement_refs": ["REQ-AI-001"],
+      "repository": "Shtenco/synergy_financial_os",
+      "branch": "test-bootstrap",
+      "statement": "AI policy review must bind each proposal to the exact FinancialSnapshot, ledger sequence, valuation-policy digest, full requirement-registry digest and TTL; hard_invariant_refs must resolve to real current REQ IDs, evidence references must be unique digests, and the strongest positive state remains REVIEWABLE.",
+      "implementation": [
+        "sinergy_financial_os/governance.py",
+        "sinergy_financial_os/ai_boundary.py",
+        "sinergy_financial_os/__init__.py"
+      ],
+      "tests": [
+        "tests/test_governance.py",
+        "tests/test_ai_boundary.py",
+        "tests/test_public_api.py"
+      ],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-AI-SCHEMA-001",
+      "canonical_requirement_refs": ["REQ-AI-001"],
+      "repository": "Shtenco/agi_olga",
+      "branch": "docs/sinergy-financial-os-ai-boundary-20260817",
+      "statement": "ai.policy-proposal/v1 remains preserved for provenance while v2 requires an exact requirement-registry digest, safe ledger sequence, canonical decimal actions and authorization=NONE before Financial OS review.",
+      "implementation": [
+        "integration/policy_proposal_v2.schema.json",
+        "integration/check_policy_proposal_v2_schema.py",
+        ".github/workflows/financial-os-ai-boundary.yml"
+      ],
+      "tests": ["integration/check_policy_proposal_v2_schema.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    },
+    {
+      "control_id": "HARDEN-TRUST-001",
+      "canonical_requirement_refs": ["REQ-CHAIN-001"],
+      "repository": "Shtenco/synergy_ai_blockchain",
+      "branch": "feat/trust-state-proof-layer-20260817",
+      "statement": "Trust commitments must bind project.proposal/v2 to its own PROJECT_PROPOSAL logical domain; superseded project.proposal/v1 is preserved for provenance but rejected for new canonical commitments, and project proposal bytes cannot be reinterpreted as project.screening/v1.",
+      "implementation": ["sinergy_ai_blockchain/schema_policy.py"],
+      "tests": ["tests/test_schema_policy.py"],
+      "implementation_status": "ADDRESSED",
+      "verification_status": "PENDING_RUNNER"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+name: period-reversal-v1
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/accounting_period_v1.py'
+      - 'sinergy_financial_os/revenue_reversal_v1.py'
+      - 'sinergy_financial_os/authorized_revenue_reversal_v1.py'
+      - 'schemas/accounting_period_v1.schema.json'
+      - 'schemas/accounting_period_close_v1.schema.json'
+      - 'schemas/revenue_reversal_authorization_v1.schema.json'
+      - 'config/schema_registry_v9.json'
+      - 'tests/test_period_reversal_v1.py'
+      - 'tests/test_period_reversal_schema_v1.py'
+      - '.github/workflows/period-reversal-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  reversal-v1:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip pytest jsonschema
+      - name: Compile period/reversal generation
+        run: >-
+          python -m py_compile
+          sinergy_financial_os/accounting_period_v1.py
+          sinergy_financial_os/revenue_reversal_v1.py
+          sinergy_financial_os/authorized_revenue_reversal_v1.py
+      - name: Run period/reversal regressions
+        run: python -m pytest tests/test_period_reversal_v1.py tests/test_period_reversal_schema_v1.py -q

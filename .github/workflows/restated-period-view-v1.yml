@@ -1,0 +1,45 @@
+name: restated-period-view-v1
+
+on:
+  push:
+    paths:
+      - 'sinergy_financial_os/accounting_restatement_view_v1.py'
+      - 'schemas/accounting_restatement_overlay_v1.schema.json'
+      - 'schemas/restated_period_view_v1.schema.json'
+      - 'config/schema_registry_v12.json'
+      - 'tests/test_restatement_view_v1.py'
+      - 'tests/test_restatement_view_schema_v1.py'
+      - 'docs/RESTATED_PERIOD_VIEW_V1_20260819.md'
+      - '.github/workflows/restated-period-view-v1.yml'
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/accounting_restatement_view_v1.py'
+      - 'schemas/accounting_restatement_overlay_v1.schema.json'
+      - 'schemas/restated_period_view_v1.schema.json'
+      - 'config/schema_registry_v12.json'
+      - 'tests/test_restatement_view_v1.py'
+      - 'tests/test_restatement_view_schema_v1.py'
+      - 'docs/RESTATED_PERIOD_VIEW_V1_20260819.md'
+      - '.github/workflows/restated-period-view-v1.yml'
+
+concurrency:
+  group: restated-period-view-v1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install -e . pytest jsonschema
+      - name: Compile restatement module
+        run: python -m py_compile sinergy_financial_os/accounting_restatement_view_v1.py
+      - name: Run restatement regressions
+        run: |
+          pytest -q \
+            tests/test_restatement_view_v1.py \
+            tests/test_restatement_view_schema_v1.py
