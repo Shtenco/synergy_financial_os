@@ -1,0 +1,17 @@
+{
+  "version": "V2.2_STRICT_LEDGER",
+  "cycles": 5000,
+  "accepted": 0,
+  "acceptance_rate": 0.0,
+  "hard_tvl_start": 1000.0,
+  "hard_tvl_end": 1000.0,
+  "hard_tvl_gain": 0.0,
+  "cumulative_consolidated_trade_pnl": 0.0,
+  "treasury_end": 1000.0,
+  "pol_hard_end": 0.0,
+  "rubc_supply_delta": 0.0,
+  "rubx_supply_delta": 0.0,
+  "max_flash_debt_end": 0.0,
+  "solvency_nav_end": 1000.0,
+  "asset_conservation": "PASS"
+}
