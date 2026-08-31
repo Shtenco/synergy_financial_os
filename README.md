@@ -14,7 +14,7 @@ V2.3 adds a strict production-shaped settlement path:
 
 `Balancer V2 -> borrow exactly 200 USDC -> external triangle -> repay exactly 200 USDC -> sweep 100% realized post-repayment surplus into canonical-USDC HardTVL`.
 
-The flash principal is never counted as wealth. The Balancer adapter hard-reverts unless the callback reports `feeAmounts[0] == 0`. If the route cannot repay the full 200 USDC and leave a positive dividend, the entire transaction reverts.
+The flash principal is never counted as wealth. The Balancer adapter hard-reverts unless the callback reports `feeAmounts[0] == 0`. If the route cannot repay the full 200 USDC and leave a strictly positive dividend, the entire transaction reverts.
 
 New files:
 
@@ -25,20 +25,22 @@ New files:
 - `python/simulate_v23_fixed200.py`
 - `V23_BALANCER_FIXED200.md`
 
-Fixed-200 strict simulation, 5000 attempts, seed 42 with independent external order flow:
+Contract-exact fixed-200 simulation, 5000 attempts, seed 42 with independent external order flow:
 
-- successful committed cycles: `4466 / 5000` (`89.32%`)
+- successful committed cycles: `4483 / 5000` (`89.66%`)
 - flash principal per committed cycle: `200 USDC`
 - flash fee: `0`
-- cumulative realized post-repayment dividends: `62096.452742 USDC`
-- HardTVL: `1000 -> 61631.570597 USDC`
-- HardTVL gain: `+60631.570597 USDC`
+- minimum realized accepted dividend: `0.0152039943 USDC`
+- cumulative realized post-repayment dividends: `62967.205670 USDC`
+- HardTVL: `1000 -> 63967.205670 USDC`
+- HardTVL gain: `+62967.205670 USDC`
+- identity: `HardTVL gain == cumulative dividends`
 - RUBC supply delta: `0`
 - RUBX supply delta: `0`
 - end-of-cycle flash debt: `0`
 - asset conservation: `PASS`
 
-The falsification control with `external order flow = 0` accepts `0 / 5000` cycles and leaves HardTVL exactly `1000 USDC`. The flash loan is financing, not the source of the dividend.
+The falsification control with `external order flow = 0` accepts `0 / 5000` cycles and leaves HardTVL exactly `1000 USDC`. The flash loan is financing, not the source of the dividend. These simulation results are conditional on the modeled order flow, fees and execution assumptions; they are not guaranteed market returns.
 
 ## V2.2 strict asset ledger
 
