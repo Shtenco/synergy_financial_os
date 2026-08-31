@@ -1,0 +1,11 @@
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+solc_version = "0.8.24"
+optimizer = true
+optimizer_runs = 20000
+fuzz_runs = 512
+
+[rpc_endpoints]
+base = "${BASE_RPC_URL}"
