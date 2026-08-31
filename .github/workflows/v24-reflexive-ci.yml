@@ -3,8 +3,8 @@ name: V2.4 Reflexive Batch CI
 on:
   pull_request:
     paths:
-      - 'src/ReflexiveSingleBatchV24.sol'
-      - 'src/SystemicNAVAccountingV24.sol'
+      - 'src/**V24.sol'
+      - 'test/**V24.t.sol'
       - 'python/simulate_v24_reflexive_batch.py'
       - 'V24_REFLEXIVE_BATCH.md'
       - '.github/workflows/v24-reflexive-ci.yml'
@@ -38,9 +38,24 @@ jobs:
           assert s['flash_debt_end'] == 0.0
           assert s['cash_conservation'] == 'PASS'
           assert s['hard_cash_multiplier_per_external_usdc'] == 1.0
-          assert s['average_marked_multiplier_per_external_usdc'] > 20000.0
+          assert s['average_protocol_marked_multiplier_per_external_usdc'] > 20000.0
+          assert s['protocol_ownership_rubc_pct'] > 99.99
+          assert s['protocol_ownership_rubx_pct'] > 99.99
+          assert s['protocol_marked_tvl_end'] < s['systemic_market_value_end']
           assert s['rubc_supply_end'] <= 1000000.0
           assert s['rubx_supply_end'] <= 1000000.0
-          assert u['average_marked_multiplier_per_external_usdc'] > 30000.0
-          print('V2.4 reflexive batch invariants PASS')
+          assert u['average_protocol_marked_multiplier_per_external_usdc'] > 30000.0
+          print('V2.4 protocol-marked reflexive invariants PASS')
           PY
+
+  solidity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - name: Compile V2.4
+        run: forge build
+      - name: V2.4 tests
+        run: forge test --match-path 'test/*V24.t.sol' -vvv
