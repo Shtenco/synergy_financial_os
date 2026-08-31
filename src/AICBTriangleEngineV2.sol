@@ -50,12 +50,12 @@ contract AICBTriangleEngineV2 {
 
     struct Policy {
         uint256 maxFlashUSDC;
-        uint256 maxTempMintRUBC;
-        uint256 maxTempMintRUBX;
         uint256 minNetProfitUSDC;
         uint256 minHardTVLGainUSDC;
         uint256 minSolvencyNAVGainUSDC;
         uint256 maxFlashFeeUSDC;
+        uint256 maxGradientMintRUBC;
+        uint256 maxGradientMintRUBX;
         bool forbidNetSupplyGrowth;
     }
     Policy public policy;
@@ -64,9 +64,6 @@ contract AICBTriangleEngineV2 {
         uint8 direction;
         uint256 flashUSDC;
         uint256 minUsdcOut;
-        uint256 tempMintRUBC;
-        uint256 tempMintRUBX;
-        bool remove100Add100;
         bytes routeData;
     }
 
@@ -76,13 +73,12 @@ contract AICBTriangleEngineV2 {
         uint256 xSupply;
         uint256 hard;
         int256 nav;
-        uint256 cReserve;
-        uint256 xReserve;
     }
     Snapshot private snap;
     bool private inCycle;
 
     event Cycle(uint8 indexed direction, uint256 flashUSDC, uint256 netProfitUSDC, uint256 hardBefore, uint256 hardAfter);
+    event GradientReset(uint256 tempMintRUBC, uint256 tempMintRUBX, uint256 rubcReserve, uint256 rubxReserve);
 
     modifier onlyOwner(){ require(msg.sender==owner,"OWNER"); _; }
     modifier onlyKeeper(){ require(msg.sender==keeper,"KEEPER"); _; }
@@ -98,16 +94,15 @@ contract AICBTriangleEngineV2 {
     function setPolicy(Policy calldata p) external onlyOwner { policy=p; }
     function setKeeper(address k) external onlyOwner { keeper=k; }
 
+    // Profit primitive: no self-emission is credited as PnL.
     function execute(Plan calldata p) external onlyKeeper returns (uint256 netProfit) {
         require(!inCycle,"ACTIVE");
         require(p.direction < 2,"DIR");
         require(p.flashUSDC <= policy.maxFlashUSDC,"FLASH_CAP");
-        require(p.tempMintRUBC <= policy.maxTempMintRUBC && p.tempMintRUBX <= policy.maxTempMintRUBX,"MINT_CAP");
 
-        (uint256 cr,uint256 xr)=crossPool.reserves();
         snap=Snapshot({
             usdc:USDC.balanceOf(address(this)), cSupply:RUBC.totalSupply(), xSupply:RUBX.totalSupply(),
-            hard:accounting.hardTVLUSDC(), nav:accounting.solvencyNAVUSDC(), cReserve:cr, xReserve:xr
+            hard:accounting.hardTVLUSDC(), nav:accounting.solvencyNAVUSDC()
         });
         inCycle=true;
         flash.flash(address(this),p.flashUSDC,abi.encode(p));
@@ -121,8 +116,6 @@ contract AICBTriangleEngineV2 {
             require(RUBC.totalSupply()<=snap.cSupply,"RUBC_INFLATION");
             require(RUBX.totalSupply()<=snap.xSupply,"RUBX_INFLATION");
         }
-        (uint256 cr2,uint256 xr2)=crossPool.reserves();
-        require(cr2==snap.cReserve && xr2==snap.xReserve,"CROSS_NOT_RESTORED");
         uint256 hardAfter=accounting.hardTVLUSDC();
         int256 navAfter=accounting.solvencyNAVUSDC();
         require(hardAfter>=snap.hard+policy.minHardTVLGainUSDC,"HARDTVL");
@@ -136,37 +129,47 @@ contract AICBTriangleEngineV2 {
         Plan memory p=abi.decode(data,(Plan));
         require(amount==p.flashUSDC,"FLASH_AMOUNT");
 
-        if(p.remove100Add100){
-            require(crossPool.protocolShareBps()==BPS,"CROSS_NOT_100_PROTOCOL");
-            (uint256 c0,uint256 x0)=crossPool.reserves();
-            (uint256 cOut,uint256 xOut,uint256 shares)=crossPool.removeAllProtocolLiquidity();
-            require(cOut==c0 && xOut==x0,"REMOVE100");
-            if(p.tempMintRUBC>0) RUBC.cbMint(address(this),p.tempMintRUBC);
-            if(p.tempMintRUBX>0) RUBX.cbMint(address(this),p.tempMintRUBX);
-            crossPool.addProtocolLiquidity(c0+p.tempMintRUBC,x0+p.tempMintRUBX,shares);
-        } else {
-            if(p.tempMintRUBC>0) RUBC.cbMint(address(this),p.tempMintRUBC);
-            if(p.tempMintRUBX>0) RUBX.cbMint(address(this),p.tempMintRUBX);
-        }
-
         require(USDC.approve(address(router),0),"A0");
         require(USDC.approve(address(router),amount),"A1");
         uint256 out=router.executeTriangle(p.direction,amount,p.minUsdcOut,p.routeData);
         require(out>=p.minUsdcOut,"SLIPPAGE");
         require(USDC.approve(address(router),0),"AR");
 
-        if(p.remove100Add100){
-            (uint256 cNow,uint256 xNow,uint256 sharesNow)=crossPool.removeAllProtocolLiquidity();
-            require(cNow>=snap.cReserve+p.tempMintRUBC,"RUBC_NOT_RETURNED");
-            require(xNow>=snap.xReserve+p.tempMintRUBX,"RUBX_NOT_RETURNED");
-            crossPool.addProtocolLiquidity(snap.cReserve,snap.xReserve,sharesNow);
-        }
-
-        if(p.tempMintRUBC>0) RUBC.cbBurn(p.tempMintRUBC);
-        if(p.tempMintRUBX>0) RUBX.cbBurn(p.tempMintRUBX);
         require(USDC.balanceOf(address(this))>=snap.usdc+amount+fee,"NO_EXTERNAL_SURPLUS");
         require(USDC.approve(address(flash),0),"F0");
         require(USDC.approve(address(flash),amount+fee),"F1");
         inCycle=false;
+    }
+
+    // Accounting-neutral REMOVE100 -> ADD100 primitive. It is deliberately
+    // separated from profit accounting and must restore reserves/ownership/supply exactly.
+    function resetGradientNeutral(uint256 tempMintRUBC, uint256 tempMintRUBX) external onlyKeeper {
+        require(!inCycle,"ACTIVE");
+        require(crossPool.protocolShareBps()==BPS,"CROSS_NOT_100_PROTOCOL");
+        require(tempMintRUBC<=policy.maxGradientMintRUBC && tempMintRUBX<=policy.maxGradientMintRUBX,"GRADIENT_CAP");
+
+        (uint256 c0,uint256 x0)=crossPool.reserves();
+        uint256 cs0=RUBC.totalSupply();
+        uint256 xs0=RUBX.totalSupply();
+
+        (uint256 cOut,uint256 xOut,uint256 shares)=crossPool.removeAllProtocolLiquidity();
+        require(cOut==c0 && xOut==x0,"REMOVE100");
+
+        if(tempMintRUBC>0) RUBC.cbMint(address(this),tempMintRUBC);
+        if(tempMintRUBX>0) RUBX.cbMint(address(this),tempMintRUBX);
+        crossPool.addProtocolLiquidity(c0+tempMintRUBC,x0+tempMintRUBX,shares);
+
+        (uint256 cTemp,uint256 xTemp,uint256 shares2)=crossPool.removeAllProtocolLiquidity();
+        require(cTemp==c0+tempMintRUBC && xTemp==x0+tempMintRUBX,"TEMP_STATE");
+        crossPool.addProtocolLiquidity(c0,x0,shares2);
+
+        if(tempMintRUBC>0) RUBC.cbBurn(tempMintRUBC);
+        if(tempMintRUBX>0) RUBX.cbBurn(tempMintRUBX);
+
+        (uint256 c1,uint256 x1)=crossPool.reserves();
+        require(c1==c0 && x1==x0,"CROSS_NOT_RESTORED");
+        require(crossPool.protocolShareBps()==BPS,"LP_OWNERSHIP_CHANGED");
+        require(RUBC.totalSupply()==cs0 && RUBX.totalSupply()==xs0,"SUPPLY_NOT_RESTORED");
+        emit GradientReset(tempMintRUBC,tempMintRUBX,c1,x1);
     }
 }
