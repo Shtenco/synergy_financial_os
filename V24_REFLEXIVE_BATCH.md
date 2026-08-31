@@ -10,15 +10,15 @@ There is no route search. The topology is fixed:
 
 Genesis canonical USDC is exactly `1 USDC`: `0.5` in RUBC/USDC and `0.5` in RUBX/USDC.
 
-A single Balancer V2 flash principal of `200 USDC` is reused many times inside one atomic external-buyer batch:
+One Balancer V2 flash principal of `200 USDC` is recycled many times inside one atomic buyer batch:
 
-`flash200 -> ADDLP200 -> buyer $1 -> REMOVE200 -> internal sync/policy -> ADDLP200 -> buyer $1 -> ... -> repay200 once`.
+`flash200 -> ADDLP200 -> buyer $1 -> REMOVE200 -> sync/policy -> depth reset -> ADDLP200 again -> ... -> repay200 once`.
 
-The same borrowed 200 USDC is a temporary execution-liquidity flywheel. It is not retained and is not counted as protocol wealth.
+The borrowed 200 USDC is an execution-liquidity flywheel. It is never counted as protocol wealth.
 
-## Why $200 is interesting for a $1 buyer quantum
+## $200 creates an approximately 1% price quantum
 
-For a CPMM USD leg with persistent USDC reserve `u0`, proportional temporary liquidity `F`, and an external buyer input `b`, zero-fee pool price moves by
+For a CPMM USD leg with persistent USDC reserve `u0`, proportional temporary liquidity `F`, and external buyer input `b`:
 
 `p1/p0 = (1 + b/(u0 + F))^2`.
 
@@ -26,90 +26,117 @@ With `u0 = 0.5`, `F = 200`, `b = 1`:
 
 `p1/p0 ~= 1.00999994`.
 
-So a single external $1 buyer quantum creates almost exactly a +1% marginal-price step while the buyer trades against ~200.5 USDC of temporary depth. Proportional REMOVE100 of the temporary LP does not change that post-trade marginal price.
+So one external buyer dollar creates almost exactly one +1% marginal-price quantum while the buyer executes against about 200.5 USDC of temporary depth. Proportional REMOVE100 of temporary LP preserves the new marginal price.
 
-This is the reason V2.4 uses 200 USDC as a price-step damper rather than as a source of profit.
+## Constant-depth price kernel
+
+After each microcycle V2.4 proportionally removes excess permanent LP until each USD price kernel returns to exactly `0.5 USDC` of persistent USDC reserve. The removed canonical USDC is swept into the Reserve Vault and the matching token side becomes protocol inventory.
+
+Because the removal is proportional, it does not change the pool price. It does, however, stop accumulated reserve capital from making the next $1 buyer less price-sensitive.
+
+This separates three functions:
+
+1. **price kernel** — always tiny and sensitive;
+2. **flash execution shell** — temporarily deep for buyer execution;
+3. **reserve vault** — stores accumulated real external USDC without diluting the price kernel.
+
+This is the main V2.4 multiplier architecture.
 
 ## Internal reflexive synchronizer
 
-After temporary LP is removed, most of the external buyer dollar is held by the protocol. A tiny part can be moved from treasury into the lower-priced second USD leg to buy/burn its token and synchronize it upward.
+After temporary LP is removed, most of the external buyer dollar is already protocol-owned. A very small amount can be moved from Reserve/Treasury into the lower-priced second USD leg to buy its token and burn it, synchronizing RUBC and RUBX upward.
 
-Moving protocol-owned USDC from treasury to a protocol-owned pool does not change consolidated canonical USDC, but it does change the reserve ratio and therefore the internal marginal price.
+Moving protocol-owned USDC from treasury to a protocol-owned pool does not change consolidated canonical cash. It does change reserve ratios and therefore marginal prices. This is the source of the reflexive marked-NAV multiplier.
 
-This is the source of the marked-NAV multiplier.
+### First $1, before emission-band damping
 
-### Exact first-quantum example, before the emission-band dampener
+With 1,000,000 RUBC and 1,000,000 RUBX initially marked at $1:
 
-Starting with 1,000,000 RUBC and 1,000,000 RUBX marked at $1:
-
-- canonical hard cash: `$1 -> $2` after one external buyer dollar;
-- RUBC marginal price: approximately `$1 -> $1.01`;
-- synchronizing RUBX to the same price costs only about `$0.00249` of internal treasury movement;
+- HardCash: `$1 -> $2`;
+- RUBC marginal price: about `$1 -> $1.01`;
+- lifting RUBX to the same internal price needs only about `$0.00249` of internal USDC movement;
 - both million-token supplies are then marginally marked about 1% higher;
-- the reflexive marked-NAV increase is about `$20,000` from one external `$1` shock.
+- incremental spot-marked systemic NAV is roughly `$20,000` from one external `$1` shock.
 
-This is a marginal-price valuation effect, not $20,000 of withdrawable USDC.
+The cash increase is still exactly `$1`. The larger number is a marginal-price valuation effect.
 
 ## Directed AI-CB monetary policy
 
-The requested asymmetry is retained exactly at the policy level:
+Requested asymmetry is retained:
 
-- every +1% price step creates a sell allowance equal to 1% of the **active emission band**;
-- every -1% price step creates a buy-and-burn allowance equal to 2% of the **active emission band**.
+- `+1%` price step => sell `1%` of the **active emission band**;
+- `-1%` price step => buy and burn `2%` of the **active emission band**.
 
-The active emission band is liquidity-normalized. Applying 1–2% to the full million-token supply against $1 genesis liquidity would be mechanically non-executable: the order would dwarf the pool. V2.4 therefore defines an active monetary tranche (simulation default: 10% of the currently active pool-side token inventory), while the rest of supply is a locked monetary reserve.
+The active emission band is liquidity-normalized. Applying 1–2% to the full million-token supply against a $1 permanent kernel would dwarf the pool. V2.4 therefore defines a liquidity-active monetary tranche; simulation default is 10% of current pool-side active token inventory. The 1:2 expansion/contraction rule is preserved exactly, while the base is made executable.
 
-The 1:2 expansion/contraction asymmetry is preserved; only the base to which it is applied is made executable.
+The remainder of supply is a locked monetary reserve and does not need to be dumped into the price kernel.
+
+## Reinvestment policy
+
+To maximize the reflexive multiplier, realized external USDC should **not** all be added to the permanent price-setting pools. Doing so deepens them and destroys price sensitivity.
+
+V2.4 reinvests into:
+
+- Reserve Vault / buy-burn budget;
+- protocol inventory;
+- optional external yield or separate POL layers;
+- only the fixed tiny `0.5 + 0.5 USDC` remains in the marginal price kernel.
+
+Temporary execution depth comes from the recycled 200-USDC flash shell instead.
 
 ## Dual accounting
 
-V2.4 intentionally exposes two different economic surfaces:
-
 ### HardCashUSDC
 
-Canonical USDC actually owned by the system after flash repayment. Internal swaps cannot increase this number by themselves.
+Canonical USDC actually owned after flash repayment. Pure internal swaps cannot increase this total; they can move it between Reserve Vault and protocol-owned pools.
 
 ### SystemicMarkedNAV
 
 `HardCash + RUBC supply * RUBC marginal price + RUBX supply * RUBX marginal price`.
 
-This metric can grow strongly from internal reserve-ratio reconfiguration even while canonical USDC is unchanged. It is useful as a systemic monetary/valuation state, but it must not be presented as 1:1 withdrawable cash.
+Internal reserve-ratio changes can increase this metric strongly without changing canonical cash.
 
-A third `liquidationNAVUSDC(fractionBps)` metric is supplied by `SystemicNAVAccountingV24.sol` to expose how much USDC a specified liquidation fraction can actually obtain from the pool curves.
+### LiquidationNAV
+
+`SystemicNAVAccountingV24.sol` also exposes an exit-aware quote surface. This is deliberately separate from marginal marked NAV so the system can exploit reflexive valuation without pretending the entire marked supply is redeemable at the marginal price.
 
 ## 100-dollar recycled-flash experiment
 
 Parameters:
 
-- genesis hard cash: `1 USDC`;
+- genesis HardCash: `1 USDC`;
+- persistent price-kernel depth: `0.5 + 0.5 USDC`;
 - one Balancer flash principal: `200 USDC`;
-- 100 microcycles inside the modeled batch;
-- one external buyer dollar per microcycle;
-- 1,000,000 RUBC and 1,000,000 RUBX initial supplies;
-- active emission band ratio: 10%;
+- 100 recycled microcycles;
+- cumulative temporary ADDLP notional: `20,000 USDC`;
+- one real external buyer dollar per microcycle;
+- initial supplies: 1,000,000 RUBC and 1,000,000 RUBX;
+- active emission band: 10%;
 - +1% -> sell 1% active band;
-- internal upward synchronization with token burn;
-- flash debt at final settlement: zero.
+- lower leg is bought/burned to synchronize upward;
+- excess permanent LP is swept after every microcycle back to a constant 0.5-USDC kernel depth.
 
 Result:
 
 - external USDC: `100`;
 - HardCash: `1 -> 101 USDC`;
-- RUBC price: `1 -> 2.213739`;
-- RUBX price: `1 -> 2.213739`;
-- RUBC supply end: `999,999.938788`;
-- RUBX supply end: `999,999.938379`;
-- spot-marked systemic NAV: about `2,000,001 -> 4,427,579 USDC-equivalent`;
-- incremental marked NAV: about `+2,427,578`;
-- average incremental marked-NAV multiplier per external USDC: about `24,275.78x`;
+- Reserve Vault: `0 -> 100 USDC`;
+- persistent price-kernel USDC at the end: exactly `1 USDC` total;
+- RUBC price: `1 -> 2.2147246936`;
+- RUBX price: `1 -> 2.2147246936`;
+- RUBC supply end: `999,999.948873`;
+- RUBX supply end: `999,999.948190`;
+- spot-marked systemic NAV: about `2,000,001 -> 4,429,550.159 USDC-equivalent`;
+- incremental marked NAV: about `+2,429,549.159`;
+- average incremental marked-NAV multiplier per external USDC: about `24,295.49x`;
 - canonical cash multiplier per external USDC: exactly `1x`;
 - cash conservation: PASS;
-- end flash debt: `0`.
+- final flash debt: `0`.
 
-Without the +1% sell-band dampener, the same toy model reaches a price around `2.70284` after 100 buyer dollars and an average incremental marked-NAV multiplier around `34,058x` per external dollar.
+Without the +1% active-band sell dampener, the constant-depth toy model reaches about `2.704797` on both internal token prices after 100 external dollars, with an average incremental marked-NAV multiplier of roughly `34,097x` per external dollar.
 
-## Important interpretation
+## Interpretation
 
-The design deliberately maximizes a **reflexive marked-value multiplier** while preserving exact canonical-cash accounting. It does not claim that marginally marking two million tokens at the internal pool price creates the same amount of immediately withdrawable USDC.
+This architecture deliberately maximizes a **reflexive marked-value multiplier** while keeping canonical cash and liquidation capacity separately visible. It demonstrates the user's central point: internal protocol trades can leave system USDC unchanged while materially changing the marked USD value of token and LP sides through reserve-ratio revaluation.
 
-That separation is what makes the architecture testable rather than circular: the system can aggressively exploit internal revaluation and still expose, side by side, how much real external reserve and liquidation capacity exists.
+That effect is economically real as a marginal valuation state, but it is not identical to immediately withdrawable external USDC. V2.4 keeps both quantities on-chain so the system can use the reflexive mechanism aggressively without hiding the distinction.
