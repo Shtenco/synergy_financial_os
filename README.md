@@ -1,4 +1,4 @@
-# SYNERGY Financial OS — RUBC/RUBX AI-CB EVM V2.2
+# SYNERGY Financial OS — RUBC/RUBX AI-CB EVM V2.3
 
 Research implementation of an inflation-neutral triangular settlement engine around:
 
@@ -6,13 +6,41 @@ Research implementation of an inflation-neutral triangular settlement engine aro
 - `RUBX/USDC`
 - `RUBC/RUBX`
 
-Two profit directions are optimized independently: `USDC -> RUBX -> RUBC -> USDC` and `USDC -> RUBC -> RUBX -> USDC`.
+Two profit directions are evaluated independently: `USDC -> RUBX -> RUBC -> USDC` and `USDC -> RUBC -> RUBX -> USDC`.
 
-## Two separate atomic primitives
+## V2.3 — Balancer V2 zero-fee fixed-200 settlement
 
-`execute()` is the profit primitive. It may accept a cycle only when a real external USDC surplus remains after flash repayment/costs. Self-emission is never credited as profit.
+V2.3 adds a strict production-shaped settlement path:
 
-`resetGradientNeutral()` is the accounting-neutral gradient primitive. It is allowed only for a 100%-protocol-owned RUBC/RUBX cross-pool and performs `REMOVE100 -> temporary mint -> ADD100(principal+gradient) -> REMOVE100 -> ADD100(exact principal) -> burn 100% temporary mint`. It must restore cross reserves, LP ownership and RUBC/RUBX supply exactly.
+`Balancer V2 -> borrow exactly 200 USDC -> external triangle -> repay exactly 200 USDC -> sweep 100% realized post-repayment surplus into canonical-USDC HardTVL`.
+
+The flash principal is never counted as wealth. The Balancer adapter hard-reverts unless the callback reports `feeAmounts[0] == 0`. If the route cannot repay the full 200 USDC and leave a strictly positive dividend, the entire transaction reverts.
+
+New files:
+
+- `src/BalancerV2ZeroFee200USDCAdapter.sol`
+- `src/AICBFixed200DividendEngineV23.sol`
+- `src/HardTVLDividendVaultV23.sol`
+- `test/Fixed200BalancerV2.t.sol`
+- `python/simulate_v23_fixed200.py`
+- `V23_BALANCER_FIXED200.md`
+
+Contract-exact fixed-200 simulation, 5000 attempts, seed 42 with independent external order flow:
+
+- successful committed cycles: `4483 / 5000` (`89.66%`)
+- flash principal per committed cycle: `200 USDC`
+- flash fee: `0`
+- minimum realized accepted dividend: `0.0152039943 USDC`
+- cumulative realized post-repayment dividends: `62967.205670 USDC`
+- HardTVL: `1000 -> 63967.205670 USDC`
+- HardTVL gain: `+62967.205670 USDC`
+- identity: `HardTVL gain == cumulative dividends`
+- RUBC supply delta: `0`
+- RUBX supply delta: `0`
+- end-of-cycle flash debt: `0`
+- asset conservation: `PASS`
+
+The falsification control with `external order flow = 0` accepts `0 / 5000` cycles and leaves HardTVL exactly `1000 USDC`. The flash loan is financing, not the source of the dividend. These simulation results are conditional on the modeled order flow, fees and execution assumptions; they are not guaranteed market returns.
 
 ## V2.2 strict asset ledger
 
@@ -20,7 +48,7 @@ Every RUBC/RUBX unit used to pair USDC in ADDLP comes from tracked pre-existing 
 
 Conservative HardTVL counts only protocol-owned canonical USDC: treasury USDC plus the protocol's proportional USDC claim inside RUBC/USDC and RUBX/USDC. RUBC/RUBX self-marks are excluded.
 
-Strict 5000-cycle result, seed 42 with independent order flow:
+Strict 5000-cycle V2.2 result, seed 42 with independent order flow:
 
 - accepted: `2804 / 5000` (`56.08%`)
 - HardTVL: `1000 -> 33299.853639 USDC`
@@ -32,7 +60,9 @@ Strict 5000-cycle result, seed 42 with independent order flow:
 - end-of-cycle flash debt: `0`
 - asset conservation: `PASS`
 
-The 5000-cycle `order flow = 0` falsification control accepts `0` cycles and leaves HardTVL exactly `1000 USDC`.
+## Separate gradient primitive
+
+`resetGradientNeutral()` remains accounting-neutral and separate from profit accounting. It is allowed only for a 100%-protocol-owned RUBC/RUBX cross-pool and performs `REMOVE100 -> temporary mint -> ADD100(principal+gradient) -> REMOVE100 -> ADD100(exact principal) -> burn 100% temporary mint`. It must restore cross reserves, LP ownership and RUBC/RUBX supply exactly.
 
 ## Quotes / Base fork path
 
@@ -49,4 +79,4 @@ Pinned Base integration:
 - SwapRouter02 `0x2626664c2603336E57B271c5C0b26F421741e481`
 - WETH/USDC 0.05% pool `0xd0b53D9277642d899DF5C87A3966A349A798F224`
 
-See `RESULTS.md`, `python/simulate_strict_v22.py`, and `results/strict_v22_summary.json`.
+See `V23_BALANCER_FIXED200.md`, `RESULTS.md`, `python/simulate_v23_fixed200.py`, and the result summaries under `results/`.
