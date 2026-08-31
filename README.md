@@ -1,40 +1,44 @@
-# SYNERGY Financial OS — EVM V2
+# SYNERGY Financial OS — RUBC/RUBX AI-CB EVM V2.2
 
-RUBC / RUBX / AI Central Bank research implementation for inflation-neutral triangular settlement.
-
-## Markets
+Research implementation of an inflation-neutral triangular settlement engine around:
 
 - `RUBC/USDC`
 - `RUBX/USDC`
 - `RUBC/RUBX`
 
-Two optimized triangle directions:
+Two profit directions are optimized independently: `USDC -> RUBX -> RUBC -> USDC` and `USDC -> RUBC -> RUBX -> USDC`.
 
-- A: `USDC -> RUBX -> RUBC -> USDC`
-- B: `USDC -> RUBC -> RUBX -> USDC`
+## Two separate atomic primitives
 
-`HardTVL` counts only protocol-owned canonical USDC equity. RUBC/RUBX self-marks do not create HardTVL. Flash debt must end at zero.
+`execute()` is the profit primitive. It may accept a cycle only when a real external USDC surplus remains after flash repayment/costs. Self-emission is never credited as profit.
 
-## Two deliberately separate primitives
+`resetGradientNeutral()` is the accounting-neutral gradient primitive. It is allowed only for a 100%-protocol-owned RUBC/RUBX cross-pool and performs `REMOVE100 -> temporary mint -> ADD100(principal+gradient) -> REMOVE100 -> ADD100(exact principal) -> burn 100% temporary mint`. It must restore cross reserves, LP ownership and RUBC/RUBX supply exactly.
 
-### 1. Profit route
+## V2.2 strict asset ledger
 
-`execute()` uses flash USDC, executes one of the two triangle directions and accepts settlement only when a real external USDC surplus remains after flash repayment/costs. No self-emission is credited as profit.
+Every RUBC/RUBX unit used to pair USDC in ADDLP comes from tracked pre-existing protocol inventory. Every cycle reconciles public-pool reserves, cross-pool reserves, protocol free inventory, external holdings and fixed total supplies.
 
-### 2. REMOVE100 -> ADD100 gradient reset
+Conservative HardTVL counts only protocol-owned canonical USDC: treasury USDC plus the protocol's proportional USDC claim inside RUBC/USDC and RUBX/USDC. RUBC/RUBX self-marks are excluded.
 
-`resetGradientNeutral()` is allowed only when the RUBC/RUBX cross-pool is `100%` protocol-owned. It performs:
+Strict 5000-cycle result, seed 42 with independent order flow:
 
-`REMOVE100 -> temporary mint -> ADD100(principal+gradient) -> REMOVE100 -> ADD100(exact principal) -> burn 100% temporary mint`.
+- accepted: `2804 / 5000` (`56.08%`)
+- HardTVL: `1000 -> 33299.853639 USDC`
+- cumulative consolidated accepted-trade PnL: `+31997.099470 USDC`
+- treasury: `7436.002392 USDC`
+- protocol-owned LP hard-USDC leg: `25863.851247 USDC`
+- RUBC supply delta: `0`
+- RUBX supply delta: `0`
+- end-of-cycle flash debt: `0`
+- asset conservation: `PASS`
 
-The call succeeds only if cross reserves, LP ownership and RUBC/RUBX supplies are restored exactly. Public RUBC/USDC and RUBX/USDC LP is never touched by this mode.
+The 5000-cycle `order flow = 0` falsification control accepts `0` cycles and leaves HardTVL exactly `1000 USDC`.
 
-The separation is intentional: trying to force exact reserve restoration and a one-way cross-pool arbitrage into the same primitive creates a self-contradictory reserve condition. V2 therefore refuses to count gradient geometry as PnL.
-
-## Quotes
+## Quotes / Base fork path
 
 - deterministic exact CPMM integer quote path: `src/TriangleMath.sol`;
-- Base Uniswap V3 exact on-chain quotes through deployed `QuoterV2` and execution through `SwapRouter02`: `src/BaseV3Adapter.sol`.
+- Base Uniswap V3 QuoterV2 / SwapRouter02 adapter: `src/BaseV3Adapter.sol`;
+- fork test performs an actual `100 USDC -> WETH -> USDC` QuoterV2 round-trip quote at fee tier 500.
 
 Pinned Base integration:
 
@@ -45,26 +49,4 @@ Pinned Base integration:
 - SwapRouter02 `0x2626664c2603336E57B271c5C0b26F421741e481`
 - WETH/USDC 0.05% pool `0xd0b53D9277642d899DF5C87A3966A349A798F224`
 
-## 5000-cycle deterministic result
-
-Baseline seed 42 with fresh independent order flow:
-
-- accepted cycles: `2997 / 5000` (`59.94%`)
-- direction A: `1491`
-- direction B: `1506`
-- HardTVL: `1000 -> 38529.58973951109 USDC`
-- cumulative external PnL: `+37529.58973951106 USDC`
-- RUBC supply: `1,000,000 -> 1,000,000`
-- RUBX supply: `1,000,000 -> 1,000,000`
-- max end-of-cycle flash debt: `0`
-- final solvency NAV: `38529.58973951114 USDC`
-
-No-order-flow control, also 5000 cycles:
-
-- accepted cycles: `0`
-- HardTVL remains exactly `1000 USDC`
-- external PnL: `0`
-
-Therefore temporary emission, flash liquidity and LP reconfiguration do not create dollar value by themselves. Persistent compounding requires fresh external order flow, fees, yield, or another independent external-value source.
-
-See `RESULTS.md` for the exact interpretation and fork status.
+See `RESULTS.md`, `python/simulate_strict_v22.py`, and `results/strict_v22_summary.json`.
