@@ -1,0 +1,18 @@
+{
+  "cycles": 5000,
+  "accepted": 2997,
+  "acceptance_rate": 0.5994,
+  "direction_A": 1491,
+  "direction_B": 1506,
+  "mean_profit_accepted": 12.522385632135824,
+  "median_profit_accepted": 5.16192542257927,
+  "max_profit": 544.3881775167094,
+  "mean_trade_accepted": 1458.43771676146,
+  "hard_tvl_start": 1000.0,
+  "hard_tvl_end": 38529.58973951109,
+  "external_pnl": 37529.58973951106,
+  "rubc_supply_delta": 0.0,
+  "rubx_supply_delta": 0.0,
+  "max_flash_debt_end": 0.0,
+  "solvency_nav_end": 38529.58973951114
+}
