@@ -46,9 +46,27 @@ jobs:
           assert good['flash_fee_per_cycle'] == 0.0
           assert good['max_flash_debt_end'] == 0.0
           assert good['hard_tvl_gain'] > 0
+          assert good['hard_tvl_equals_start_plus_dividends'] is True
+          assert abs(good['hard_tvl_gain'] - good['cumulative_dividends']) < 1e-6
           assert good['rubc_supply_delta'] == 0.0
           assert good['rubx_supply_delta'] == 0.0
           assert bad['executed'] == 0
           assert bad['hard_tvl_gain'] == 0.0
-          print('V2.3 invariant checks PASS')
+          print('V2.3 contract-exact invariant checks PASS')
           PY
+
+  base-fork:
+    runs-on: ubuntu-latest
+    env:
+      BASE_RPC_URL: ${{ secrets.BASE_RPC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - name: Live Base Balancer V2 fee and 200-USDC flash gate
+        if: env.BASE_RPC_URL != ''
+        run: forge test --match-contract BalancerV2BaseForkV23Test -vvv
+      - name: Explain skipped live gate
+        if: env.BASE_RPC_URL == ''
+        run: echo 'BASE_RPC_URL is not configured; live Balancer V2 fork gate skipped.'
