@@ -1,0 +1,11 @@
+{
+  "successful": 0,
+  "cycles": 5000,
+  "final_hard_tvl": 1000.0,
+  "external_pnl": 0.0,
+  "final_rubc_supply": 1000000.0,
+  "final_rubx_supply": 1000000.0,
+  "final_solvency_nav": 1000.0,
+  "pol_usdc": 0.0,
+  "treasury_usdc": 1000.0
+}
