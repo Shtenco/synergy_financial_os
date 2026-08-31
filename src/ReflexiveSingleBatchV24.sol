@@ -28,6 +28,12 @@ interface IReflexiveKernelV24 {
         uint16 burnBpsPerDownPct,
         uint16 activeBandBps
     ) external returns (int256 rubcSupplyDelta, int256 rubxSupplyDelta);
+
+    /// @dev Proportionally removes excess permanent LP from both USD legs and
+    /// sweeps it to protocol reserve while preserving current marginal prices.
+    function resetPriceKernelDepth(uint256 targetUSDCPerLeg)
+        external returns (uint256 sweptUSDC, uint256 sweptRUBC, uint256 sweptRUBX);
+
     function hardCashUSDC() external view returns (uint256);
     function spotMarkedNAVUSDC() external view returns (uint256);
 }
@@ -45,11 +51,12 @@ contract ReflexiveSingleBatchV24 {
     IReflexiveKernelV24 public kernel;
 
     struct Policy {
-        uint16 sellBpsPerUpPct;       // 100 = 1% active band per +1% price
-        uint16 burnBpsPerDownPct;     // 200 = 2% active band per -1% price
+        uint16 sellBpsPerUpPct;       // must be 100 = 1% active band per +1%
+        uint16 burnBpsPerDownPct;     // must be 200 = 2% active band per -1%
         uint16 activeBandBps;         // e.g. 1000 = 10% liquidity-active tranche
         uint16 maxQuanta;
         uint256 minHardCashGainPerQuantum;
+        uint256 targetKernelUSDCPerLeg; // normally 0.5e6
     }
 
     struct Batch {
@@ -68,6 +75,7 @@ contract ReflexiveSingleBatchV24 {
     event BatchSettled(
         uint256 externalUSDCIn,
         uint256 flashPrincipal,
+        uint256 cumulativeTempLPNotional,
         uint256 hardCashBefore,
         uint256 hardCashAfter,
         uint256 markedNAVBefore,
@@ -86,10 +94,7 @@ contract ReflexiveSingleBatchV24 {
         Policy memory p
     ) {
         require(owner_ != address(0) && keeper_ != address(0), "ROLE");
-        require(p.sellBpsPerUpPct == 100, "SELL_RULE");
-        require(p.burnBpsPerDownPct == 200, "BURN_RULE");
-        require(p.activeBandBps > 0 && p.activeBandBps <= 10_000, "BAND");
-        require(p.maxQuanta > 0, "QUANTA");
+        validatePolicy(p);
         owner = owner_;
         keeper = keeper_;
         USDC = usdc_;
@@ -98,11 +103,16 @@ contract ReflexiveSingleBatchV24 {
         policy = p;
     }
 
-    function setPolicy(Policy calldata p) external onlyOwner {
+    function validatePolicy(Policy memory p) internal pure {
         require(p.sellBpsPerUpPct == 100, "SELL_RULE");
         require(p.burnBpsPerDownPct == 200, "BURN_RULE");
         require(p.activeBandBps > 0 && p.activeBandBps <= 10_000, "BAND");
         require(p.maxQuanta > 0, "QUANTA");
+        require(p.targetKernelUSDCPerLeg > 0, "KERNEL_DEPTH");
+    }
+
+    function setPolicy(Policy calldata p) external onlyOwner {
+        validatePolicy(p);
         policy = p;
     }
 
@@ -111,8 +121,8 @@ contract ReflexiveSingleBatchV24 {
         kernel = k;
     }
 
-    /// @notice Public buyer entrypoint. Authorization is economic: caller must
-    /// transfer the full external-USDC batch amount. No tx.origin checks.
+    /// @notice Public buyer entrypoint. Caller supplies exactly N external
+    /// one-USDC quanta before the single Balancer flash callback starts.
     function executeBatch(Batch calldata b) external {
         require(!inFlash, "ACTIVE");
         require(b.quanta > 0 && b.quanta <= policy.maxQuanta, "QUANTA");
@@ -139,6 +149,7 @@ contract ReflexiveSingleBatchV24 {
         emit BatchSettled(
             externalUSDCIn,
             FLASH_PRINCIPAL,
+            FLASH_PRINCIPAL * uint256(b.quanta),
             hardBefore,
             hardAfter,
             markedBefore,
@@ -150,6 +161,8 @@ contract ReflexiveSingleBatchV24 {
         externalUSDCIn = 0;
     }
 
+    /// @notice Balancer adapter callback. The 200 USDC is repaid only once,
+    /// after it has been recycled through all microcycles.
     function onFlash(uint256 amount, uint256 fee, bytes calldata data) external {
         require(msg.sender == address(flashAdapter) && inFlash, "FLASH_CALLER");
         require(amount == FLASH_PRINCIPAL, "NOT_200");
@@ -162,17 +175,27 @@ contract ReflexiveSingleBatchV24 {
         for (uint256 i = 0; i < b.quanta; ++i) {
             uint8 leg = uint8((uint256(b.firstLeg) + i) & 1);
 
+            // 1. Temporary execution shell.
             kernel.openTemporaryLiquidity(leg, FLASH_PRINCIPAL);
+
+            // 2. One real external buyer dollar.
             kernel.executeBuyerQuantum(leg, BUYER_QUANTUM, buyer, b.minTokenOutPerQuantum);
+
+            // 3. REMOVE100 makes the same flash principal reusable.
             uint256 returned = kernel.closeTemporaryLiquidity(leg);
             require(returned >= FLASH_PRINCIPAL, "TEMP_LP_PRINCIPAL");
 
+            // 4. Internal revaluation + asymmetric monetary rule.
             kernel.synchronizeUpward();
             kernel.applyEmissionPolicy(
                 policy.sellBpsPerUpPct,
                 policy.burnBpsPerDownPct,
                 policy.activeBandBps
             );
+
+            // 5. Sweep excess persistent LP into Reserve Vault without changing
+            // price, keeping the next $1 quantum maximally sensitive.
+            kernel.resetPriceKernelDepth(policy.targetKernelUSDCPerLeg);
         }
 
         require(USDC.approve(address(kernel), 0), "K_RESET");
