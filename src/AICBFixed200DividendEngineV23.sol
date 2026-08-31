@@ -113,6 +113,7 @@ contract AICBFixed200DividendEngineV23 {
         flashAdapter = flashAdapter_;
         router = router_;
         dividendVault = dividendVault_;
+        require(policy_.minDividendUSDC > 0 && policy_.minHardTVLGainUSDC > 0, "ZERO_POLICY_GATE");
         policy = policy_;
     }
 
@@ -128,6 +129,7 @@ contract AICBFixed200DividendEngineV23 {
     }
 
     function setPolicy(Policy calldata p) external onlyOwner {
+        require(p.minDividendUSDC > 0 && p.minHardTVLGainUSDC > 0, "ZERO_POLICY_GATE");
         policy = p;
         emit PolicyUpdated(p.minDividendUSDC, p.minHardTVLGainUSDC, p.requireExactSupplyRestoration);
     }
@@ -149,6 +151,7 @@ contract AICBFixed200DividendEngineV23 {
         inCycle = true;
         flashAdapter.flash(address(this), FLASH_PRINCIPAL, abi.encode(p));
         require(!inCycle, "FLASH_CALLBACK_INCOMPLETE");
+        require(USDC.approve(address(flashAdapter), 0), "FLASH_APPROVE_RESET");
 
         uint256 engineAfterRepay = USDC.balanceOf(address(this));
         require(engineAfterRepay >= snap.engineUSDC, "POST_REPAY_LOSS");
@@ -194,14 +197,11 @@ contract AICBFixed200DividendEngineV23 {
         require(out >= p.minUsdcOut, "SLIPPAGE");
         require(USDC.approve(address(router), 0), "ROUTER_APPROVE_RESET");
 
-        // Before the adapter pulls the 200-USDC repayment, the engine must already
-        // hold its pre-cycle balance + principal + a real dividend.
         require(
             USDC.balanceOf(address(this)) >= snap.engineUSDC + FLASH_PRINCIPAL + policy.minDividendUSDC,
             "NO_REAL_SURPLUS"
         );
 
-        // Balancer adapter pulls exactly 200 USDC and transfers it back to the Vault.
         require(USDC.approve(address(flashAdapter), 0), "FLASH_APPROVE0");
         require(USDC.approve(address(flashAdapter), FLASH_PRINCIPAL), "FLASH_APPROVE");
         inCycle = false;
