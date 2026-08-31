@@ -1,0 +1,20 @@
+{
+  "version": "V2.4_REFLEXIVE_SINGLE_BATCH",
+  "genesis_hard_cash_usdc": 1.0,
+  "flash_principal_usdc": 200.0,
+  "external_usdc_total": 100.0,
+  "microcycles": 100,
+  "hard_cash_end": 101.0000000000002,
+  "hard_cash_multiplier_per_external_usdc": 1.0,
+  "rubc_price_end": 2.2137392680880255,
+  "rubx_price_end": 2.2137392680880255,
+  "spot_marked_nav_end": 4427579.264255691,
+  "initial_spot_marked_nav": 2000001.0,
+  "incremental_marked_nav": 2427578.2642556913,
+  "average_marked_multiplier_per_external_usdc": 24275.782642556915,
+  "rubc_supply_end": 999999.9387877915,
+  "rubx_supply_end": 999999.9383791523,
+  "flash_debt_end": 0.0,
+  "cash_conservation": "PASS",
+  "interpretation": "Spot-marked NAV is a reflexive marginal-price metric; it is not withdrawable canonical USDC."
+}
