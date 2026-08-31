@@ -13,11 +13,23 @@ Two optimized triangle directions:
 - A: `USDC -> RUBX -> RUBC -> USDC`
 - B: `USDC -> RUBC -> RUBX -> USDC`
 
-`HardTVL` counts only protocol-owned canonical USDC equity. RUBC/RUBX self-marks do not create HardTVL. Temporary RUBC/RUBX mint is cycle debt and must be burned before settlement. Flash debt must end at zero.
+`HardTVL` counts only protocol-owned canonical USDC equity. RUBC/RUBX self-marks do not create HardTVL. Flash debt must end at zero.
 
-## REMOVE100 -> ADD100
+## Two deliberately separate primitives
 
-Gradient reconfiguration is allowed only when the RUBC/RUBX cross-pool is `100%` protocol-owned. The engine snapshots cross reserves and refuses settlement unless exact pre-cycle principal is restored. Public RUBC/USDC and RUBX/USDC LP is not removable by this mode.
+### 1. Profit route
+
+`execute()` uses flash USDC, executes one of the two triangle directions and accepts settlement only when a real external USDC surplus remains after flash repayment/costs. No self-emission is credited as profit.
+
+### 2. REMOVE100 -> ADD100 gradient reset
+
+`resetGradientNeutral()` is allowed only when the RUBC/RUBX cross-pool is `100%` protocol-owned. It performs:
+
+`REMOVE100 -> temporary mint -> ADD100(principal+gradient) -> REMOVE100 -> ADD100(exact principal) -> burn 100% temporary mint`.
+
+The call succeeds only if cross reserves, LP ownership and RUBC/RUBX supplies are restored exactly. Public RUBC/USDC and RUBX/USDC LP is never touched by this mode.
+
+The separation is intentional: trying to force exact reserve restoration and a one-way cross-pool arbitrage into the same primitive creates a self-contradictory reserve condition. V2 therefore refuses to count gradient geometry as PnL.
 
 ## Quotes
 
