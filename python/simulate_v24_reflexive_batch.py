@@ -27,24 +27,20 @@ class Pool:
         self.usdc-=u; self.token-=t; return u,t
 
 def run(quanta=100,buyer=1.,flash=200.,band=.10,policy=True,kernel_usdc=.5,out='results/v24_reflexive'):
-    # Exactly $1 genesis hard cash: $0.5 in each USD price kernel.
     cu,xu=Pool(.5,.5),Pool(.5,.5)
-    treasury=0.; inv_c=inv_x=0.; sc=sx=1_000_000.
-    initial_hard=1.; initial_mark=initial_hard+sc*cu.price+sx*xu.price
+    treasury=0.; external_c=external_x=0.; sc=sx=1_000_000.
+    initial_hard=1.; initial_protocol_mark=initial_hard+sc*cu.price+sx*xu.price
     rows=[]
 
     for i in range(1,quanta+1):
         pre_c,pre_x=cu.price,xu.price
         active=cu if i%2 else xu
-
-        # SAME 200-USDC flash principal is recycled every microcycle.
         sh=active.add_temp(flash)
-        active.buy(buyer)
-        temp_u,_=active.remove(sh)           # proportional REMOVE preserves spot price
-        treasury += temp_u-flash             # 200 immediately reusable
+        bought=active.buy(buyer)
+        if i%2:external_c+=bought
+        else:external_x+=bought
+        temp_u,_=active.remove(sh); treasury+=temp_u-flash
 
-        # Internal triangle synchronizer: move owned USDC to lower leg,
-        # buy token and burn. Consolidated canonical cash is unchanged.
         hi=max(cu.price,xu.price)
         if cu.price<hi:
             spend,burn=cu.buy_to_price(hi); assert spend<=treasury+1e-9; treasury-=spend; sc-=burn
@@ -52,55 +48,54 @@ def run(quanta=100,buyer=1.,flash=200.,band=.10,policy=True,kernel_usdc=.5,out='
             spend,burn=xu.buy_to_price(hi); assert spend<=treasury+1e-9; treasury-=spend; sx-=burn
 
         if policy:
-            # +1% price => sell 1% ACTIVE EMISSION BAND.
-            # Downside branch in the execution kernel uses 2x buy/burn per -1%.
             for sym,pool,pre in [('C',cu,pre_c),('X',xu,pre_x)]:
                 rise=max(pool.price/pre-1.,0.)
                 if rise:
-                    active_emission=band*pool.token
-                    q=rise*active_emission
-                    treasury += pool.sell(q)
+                    q=rise*(band*pool.token); treasury+=pool.sell(q)
                     if sym=='C':sc+=q
                     else:sx+=q
-
             hi=max(cu.price,xu.price)
             if cu.price<hi:
                 spend,burn=cu.buy_to_price(hi); assert spend<=treasury+1e-9; treasury-=spend; sc-=burn
             if xu.price<hi:
                 spend,burn=xu.buy_to_price(hi); assert spend<=treasury+1e-9; treasury-=spend; sx-=burn
 
-        # Gradient/depth recharge: proportionally REMOVE excess persistent LP
-        # until each USD price kernel is back at $0.5. Price is unchanged.
-        u,t=cu.reset_usdc_depth(kernel_usdc); treasury+=u; inv_c+=t
-        u,t=xu.reset_usdc_depth(kernel_usdc); treasury+=u; inv_x+=t
+        # Constant-depth recharge: sweep excess permanent LP to reserve.
+        u,_=cu.reset_usdc_depth(kernel_usdc); treasury+=u
+        u,_=xu.reset_usdc_depth(kernel_usdc); treasury+=u
 
-        hard=treasury+cu.usdc+xu.usdc
-        expected=initial_hard+i*buyer
-        assert abs(hard-expected)<1e-8
-        marked=hard+sc*cu.price+sx*xu.price
+        hard=treasury+cu.usdc+xu.usdc; assert abs(hard-(1.+i*buyer))<1e-8
+        protocol_c=sc-external_c; protocol_x=sx-external_x
+        assert protocol_c>=0 and protocol_x>=0
+        protocol_mark=hard+protocol_c*cu.price+protocol_x*xu.price
+        systemic_mark=hard+sc*cu.price+sx*xu.price
         rows.append(dict(
             quantum=i,external_usdc_cumulative=i*buyer,hard_cash_usdc=hard,
             rubc_price=cu.price,rubx_price=xu.price,reserve_vault_usdc=treasury,
-            cu_kernel_usdc=cu.usdc,xu_kernel_usdc=xu.usdc,
-            protocol_inventory_rubc=inv_c,protocol_inventory_rubx=inv_x,
-            rubc_supply=sc,rubx_supply=sx,spot_marked_nav_usdc=marked,
-            incremental_marked_nav=marked-initial_mark,
-            marked_multiplier_per_external_usdc=(marked-initial_mark)/(i*buyer),
+            cu_kernel_usdc=cu.usdc,xu_kernel_usdc=xu.usdc,rubc_supply=sc,rubx_supply=sx,
+            external_rubc=external_c,external_rubx=external_x,
+            protocol_owned_rubc=protocol_c,protocol_owned_rubx=protocol_x,
+            protocol_ownership_rubc_pct=100*protocol_c/sc,protocol_ownership_rubx_pct=100*protocol_x/sx,
+            protocol_marked_tvl_usdc=protocol_mark,systemic_market_value_usdc=systemic_mark,
+            protocol_incremental_marked_tvl=protocol_mark-initial_protocol_mark,
+            protocol_marked_multiplier_per_external_usdc=(protocol_mark-initial_protocol_mark)/(i*buyer),
             flash_principal_recycled=flash
         ))
 
+    r=rows[-1]
     s=dict(
-        version='V2.4_REFLEXIVE_SINGLE_BATCH_CONSTANT_DEPTH',quanta=quanta,
-        genesis_hard_cash_usdc=initial_hard,flash_principal_usdc=flash,
-        cumulative_temp_lp_notional_usdc=flash*quanta,external_usdc_total=quanta*buyer,
-        hard_cash_end=rows[-1]['hard_cash_usdc'],reserve_vault_end=rows[-1]['reserve_vault_usdc'],
-        price_kernel_usdc_end=rows[-1]['cu_kernel_usdc']+rows[-1]['xu_kernel_usdc'],
-        hard_cash_multiplier_per_external_usdc=1.0,
-        rubc_price_end=rows[-1]['rubc_price'],rubx_price_end=rows[-1]['rubx_price'],
-        spot_marked_nav_end=rows[-1]['spot_marked_nav_usdc'],incremental_marked_nav=rows[-1]['incremental_marked_nav'],
-        average_marked_multiplier_per_external_usdc=rows[-1]['marked_multiplier_per_external_usdc'],
-        rubc_supply_end=sc,rubx_supply_end=sx,flash_debt_end=0.,cash_conservation='PASS',
-        note='Marked NAV is a reflexive marginal-price valuation, not withdrawable canonical USDC.'
+        version='V2.4_REFLEXIVE_SINGLE_BATCH_PROTOCOL_MARKED_TVL',quanta=quanta,
+        genesis_hard_cash_usdc=1.,flash_principal_usdc=flash,cumulative_temp_lp_notional_usdc=flash*quanta,
+        external_usdc_total=quanta*buyer,hard_cash_end=r['hard_cash_usdc'],reserve_vault_end=r['reserve_vault_usdc'],
+        price_kernel_usdc_end=r['cu_kernel_usdc']+r['xu_kernel_usdc'],hard_cash_multiplier_per_external_usdc=1.0,
+        rubc_price_end=r['rubc_price'],rubx_price_end=r['rubx_price'],protocol_owned_rubc_end=r['protocol_owned_rubc'],
+        protocol_owned_rubx_end=r['protocol_owned_rubx'],protocol_ownership_rubc_pct=r['protocol_ownership_rubc_pct'],
+        protocol_ownership_rubx_pct=r['protocol_ownership_rubx_pct'],protocol_marked_tvl_end=r['protocol_marked_tvl_usdc'],
+        protocol_incremental_marked_tvl=r['protocol_incremental_marked_tvl'],
+        average_protocol_marked_multiplier_per_external_usdc=r['protocol_marked_multiplier_per_external_usdc'],
+        systemic_market_value_end=r['systemic_market_value_usdc'],rubc_supply_end=sc,rubx_supply_end=sx,
+        external_rubc_end=external_c,external_rubx_end=external_x,flash_debt_end=0.,cash_conservation='PASS',
+        note='ProtocolMarkedTVL marks protocol-owned inventory at marginal internal prices; it is not immediately withdrawable canonical USDC.'
     )
     p=Path(out);p.mkdir(parents=True,exist_ok=True)
     with (p/'cycles.csv').open('w',newline='') as f:
