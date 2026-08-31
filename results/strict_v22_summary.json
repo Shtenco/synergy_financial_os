@@ -1,0 +1,21 @@
+{
+  "version": "V2.2_STRICT_LEDGER",
+  "cycles": 5000,
+  "accepted": 2804,
+  "acceptance_rate": 0.5608,
+  "hard_tvl_start": 1000.0,
+  "hard_tvl_end": 33299.853639000234,
+  "hard_tvl_gain": 32299.853639000234,
+  "cumulative_consolidated_trade_pnl": 31997.099469554076,
+  "treasury_end": 7436.002391662041,
+  "pol_hard_end": 25863.851247338192,
+  "cu_protocol_lp_share": 0.01099054025956051,
+  "xu_protocol_lp_share": 0.010535547174067685,
+  "protocol_free_rubc_end": 1990011.897771068,
+  "protocol_free_rubx_end": 1990857.8210648359,
+  "rubc_supply_delta": 0.0,
+  "rubx_supply_delta": 0.0,
+  "max_flash_debt_end": 0.0,
+  "solvency_nav_end": 33299.85363900103,
+  "asset_conservation": "PASS"
+}
