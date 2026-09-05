@@ -1,0 +1,30 @@
+name: External Profit Import v1
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/external_profit_import_v1.py'
+      - 'tests/test_external_profit_import_v1.py'
+      - 'docs/EXTERNAL_PROFIT_IMPORT_V1_20260905.md'
+      - '.github/workflows/external-profit-import-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dev dependencies
+        run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+      - name: Test external profit importer
+        run: pytest -q tests/test_external_profit_import_v1.py
+      - name: Regression test reporting ledger
+        run: pytest -q tests/test_reporting.py tests/test_ledger_event_v2_accounting_close_v2.py
+      - name: Compile importer
+        run: python -m py_compile sinergy_financial_os/external_profit_import_v1.py
