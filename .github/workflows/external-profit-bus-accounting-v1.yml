@@ -1,0 +1,30 @@
+name: External Profit Bus Accounting v1
+
+on:
+  pull_request:
+    paths:
+      - 'sinergy_financial_os/external_profit_bus_accounting_v1.py'
+      - 'tests/test_external_profit_bus_accounting_v1.py'
+      - 'docs/EXTERNAL_PROFIT_BUS_ACCOUNTING_V1_20260905.md'
+      - '.github/workflows/external-profit-bus-accounting-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package and tests
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . pytest
+      - name: Run accounting adversarial tests
+        run: pytest -q tests/test_external_profit_bus_accounting_v1.py
+      - name: Compile accounting module
+        run: python -m py_compile sinergy_financial_os/external_profit_bus_accounting_v1.py
