@@ -20,8 +20,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install pytest only
-        run: python -m pip install --upgrade pip pytest
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest jsonschema
       - name: Test external profit importer
         run: PYTHONPATH=. pytest -q tests/test_external_profit_import_v1.py
       - name: Regression test reporting ledger
