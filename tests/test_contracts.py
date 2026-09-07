@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from synergy_financial_os import (
+    EligibleAssetGrowthAttestation,
     FinancialCommitmentArtifact,
     FinancialContractError,
     ProjectUnderwritingDecision,
@@ -43,3 +44,75 @@ def test_financial_commitment_requires_real_hashes():
         accounting_period_end=datetime.now(timezone.utc),
     )
     assert artifact.as_payload()["snapshot_hash"] == "a" * 64
+
+
+def test_real_asset_growth_attestation_credits_only_verified_net_hardnav_growth():
+    attestation = EligibleAssetGrowthAttestation(
+        close_id="close:2",
+        close_sequence=2,
+        previous_hardnav=1000.0,
+        current_hardnav=1080.0,
+        previous_liabilities=100.0,
+        current_liabilities=120.0,
+        eligible_asset_gross_growth=100.0,
+        internal_mark_change=50.0,
+        flash_principal_inflow=0.0,
+        eligible_asset_classes=("EXTERNAL_CASH",),
+        evidence_refs=("settlement:bank:123",),
+    )
+
+    assert attestation.hardnav_growth == 80.0
+    assert attestation.liability_increase == 20.0
+    assert attestation.net_eligible_asset_growth == 80.0
+    assert attestation.credited_growth == 80.0
+    payload = attestation.as_payload()
+    assert payload["credited_growth"] == 80.0
+    assert payload["internal_mark_change"] == 50.0
+
+
+def test_internal_mark_only_creates_zero_emission_credit():
+    attestation = EligibleAssetGrowthAttestation(
+        close_id="close:mark",
+        close_sequence=3,
+        previous_hardnav=1000.0,
+        current_hardnav=1100.0,
+        previous_liabilities=100.0,
+        current_liabilities=100.0,
+        eligible_asset_gross_growth=0.0,
+        internal_mark_change=100.0,
+        flash_principal_inflow=0.0,
+    )
+    assert attestation.credited_growth == 0.0
+
+
+def test_liability_funded_asset_growth_creates_zero_emission_credit():
+    attestation = EligibleAssetGrowthAttestation(
+        close_id="close:flash",
+        close_sequence=4,
+        previous_hardnav=1000.0,
+        current_hardnav=1000.0,
+        previous_liabilities=100.0,
+        current_liabilities=200.0,
+        eligible_asset_gross_growth=100.0,
+        internal_mark_change=0.0,
+        flash_principal_inflow=100.0,
+        eligible_asset_classes=("EXTERNAL_CASH",),
+        evidence_refs=("flash:tx:abc",),
+    )
+    assert attestation.net_eligible_asset_growth == 0.0
+    assert attestation.credited_growth == 0.0
+
+
+def test_positive_eligible_growth_requires_class_and_evidence():
+    with pytest.raises(FinancialContractError):
+        EligibleAssetGrowthAttestation(
+            close_id="close:no-proof",
+            close_sequence=5,
+            previous_hardnav=1000.0,
+            current_hardnav=1010.0,
+            previous_liabilities=100.0,
+            current_liabilities=100.0,
+            eligible_asset_gross_growth=10.0,
+            internal_mark_change=0.0,
+            flash_principal_inflow=0.0,
+        )
