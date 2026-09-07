@@ -4,6 +4,7 @@ import pytest
 
 from synergy_financial_os import (
     EligibleAssetGrowthAttestation,
+    EmissionReleaseRecognition,
     FinancialCommitmentArtifact,
     FinancialContractError,
     ProjectUnderwritingDecision,
@@ -115,4 +116,34 @@ def test_positive_eligible_growth_requires_class_and_evidence():
             eligible_asset_gross_growth=10.0,
             internal_mark_change=0.0,
             flash_principal_inflow=0.0,
+        )
+
+
+def test_emission_release_is_recognized_without_revenue_or_profit():
+    recognition = EmissionReleaseRecognition(
+        proposal_id="aicb:proposal:17",
+        release_tx_ref="polygon:tx:release-17",
+        financial_growth_attestation_ref="financial:close:42",
+        productive_growth_attestation_ref="eurasian:close:9",
+        released_units=50.0,
+        unit_value=1.0,
+        accounting_classification="MONETARY_LIABILITY",
+    )
+    payload = recognition.as_payload()
+    assert payload["released_monetary_value"] == 50.0
+    assert payload["recognized_revenue"] == 0.0
+    assert payload["recognized_profit"] == 0.0
+
+
+def test_emission_release_cannot_be_booked_as_profit():
+    with pytest.raises(FinancialContractError):
+        EmissionReleaseRecognition(
+            proposal_id="aicb:proposal:17",
+            release_tx_ref="polygon:tx:release-17",
+            financial_growth_attestation_ref="financial:close:42",
+            productive_growth_attestation_ref="eurasian:close:9",
+            released_units=50.0,
+            unit_value=1.0,
+            accounting_classification="MONETARY_LIABILITY",
+            recognized_profit=50.0,
         )
