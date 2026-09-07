@@ -147,6 +147,60 @@ class EligibleAssetGrowthAttestation:
 
 
 @dataclass(frozen=True)
+class EmissionReleaseRecognition:
+    """Financial OS recognition of an AICB escrow release.
+
+    Minting or releasing a monetary unit is not revenue and is not realized
+    profit. The legal/accounting classification of the circulating unit is kept
+    explicit because it depends on the sandbox instrument and issuer structure.
+    """
+
+    proposal_id: str
+    release_tx_ref: str
+    financial_growth_attestation_ref: str
+    productive_growth_attestation_ref: str
+    released_units: float
+    unit_value: float
+    accounting_classification: Literal[
+        "MONETARY_LIABILITY",
+        "EQUITY_LIKE_CIRCULATION",
+        "OFF_BALANCE_SHEET_UNIT",
+    ]
+    recognition_status: Literal["RECOGNIZED", "EXCEPTION", "REVERSED"] = "RECOGNIZED"
+    recognized_revenue: float = 0.0
+    recognized_profit: float = 0.0
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("released_units", self.released_units),
+            ("unit_value", self.unit_value),
+        ):
+            if value < 0:
+                raise FinancialContractError(f"{name} must be non-negative")
+        for name, value in (
+            ("proposal_id", self.proposal_id),
+            ("release_tx_ref", self.release_tx_ref),
+            ("financial_growth_attestation_ref", self.financial_growth_attestation_ref),
+            ("productive_growth_attestation_ref", self.productive_growth_attestation_ref),
+        ):
+            if not value:
+                raise FinancialContractError(f"{name} is required")
+        if abs(self.recognized_revenue) > 1e-12 or abs(self.recognized_profit) > 1e-12:
+            raise FinancialContractError("mint/release cannot be recognized as revenue or profit")
+        if self.recognition_status == "RECOGNIZED" and self.released_units <= 0:
+            raise FinancialContractError("recognized release must contain positive units")
+
+    @property
+    def released_monetary_value(self) -> float:
+        return self.released_units * self.unit_value
+
+    def as_payload(self) -> dict:
+        payload = asdict(self)
+        payload["released_monetary_value"] = self.released_monetary_value
+        return payload
+
+
+@dataclass(frozen=True)
 class FinancialCommitmentArtifact:
     close_id: str
     snapshot_hash: str
