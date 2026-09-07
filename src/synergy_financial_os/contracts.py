@@ -63,6 +63,90 @@ class BudgetAccountingRecognition:
 
 
 @dataclass(frozen=True)
+class EligibleAssetGrowthAttestation:
+    """Canonical Financial OS input for real-asset-backed emission release.
+
+    The attestation intentionally separates gross eligible asset growth from
+    HardNAV and liabilities. Emission credit is the conservative minimum of
+    positive HardNAV growth and eligible growth net of new liabilities.
+
+    Internal marks and flash principal are audit fields only; they never enter
+    the credited-growth calculation.
+    """
+
+    close_id: str
+    close_sequence: int
+    previous_hardnav: float
+    current_hardnav: float
+    previous_liabilities: float
+    current_liabilities: float
+    eligible_asset_gross_growth: float
+    internal_mark_change: float
+    flash_principal_inflow: float
+    eligible_asset_classes: tuple[
+        Literal["EXTERNAL_CASH", "SETTLED_RECEIVABLE", "VERIFIED_PRODUCTIVE_ASSET"], ...
+    ] = field(default_factory=tuple)
+    evidence_refs: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self) -> None:
+        if not self.close_id:
+            raise FinancialContractError("close_id is required")
+        if self.close_sequence <= 0:
+            raise FinancialContractError("close_sequence must be positive")
+        for name, value in (
+            ("previous_hardnav", self.previous_hardnav),
+            ("current_hardnav", self.current_hardnav),
+            ("previous_liabilities", self.previous_liabilities),
+            ("current_liabilities", self.current_liabilities),
+            ("eligible_asset_gross_growth", self.eligible_asset_gross_growth),
+            ("flash_principal_inflow", self.flash_principal_inflow),
+        ):
+            if value < 0:
+                raise FinancialContractError(f"{name} must be non-negative")
+
+        allowed_classes = {
+            "EXTERNAL_CASH",
+            "SETTLED_RECEIVABLE",
+            "VERIFIED_PRODUCTIVE_ASSET",
+        }
+        unknown = set(self.eligible_asset_classes) - allowed_classes
+        if unknown:
+            raise FinancialContractError(f"unsupported eligible asset classes: {sorted(unknown)}")
+        if self.eligible_asset_gross_growth > 0 and not self.eligible_asset_classes:
+            raise FinancialContractError("positive eligible growth requires an eligible asset class")
+        if self.eligible_asset_gross_growth > 0 and not self.evidence_refs:
+            raise FinancialContractError("positive eligible growth requires evidence refs")
+        if any(not ref for ref in self.evidence_refs):
+            raise FinancialContractError("evidence refs cannot contain empty values")
+
+    @property
+    def hardnav_growth(self) -> float:
+        return max(self.current_hardnav - self.previous_hardnav, 0.0)
+
+    @property
+    def liability_increase(self) -> float:
+        return max(self.current_liabilities - self.previous_liabilities, 0.0)
+
+    @property
+    def net_eligible_asset_growth(self) -> float:
+        return max(self.eligible_asset_gross_growth - self.liability_increase, 0.0)
+
+    @property
+    def credited_growth(self) -> float:
+        return min(self.hardnav_growth, self.net_eligible_asset_growth)
+
+    def as_payload(self) -> dict:
+        payload = asdict(self)
+        payload["eligible_asset_classes"] = list(self.eligible_asset_classes)
+        payload["evidence_refs"] = list(self.evidence_refs)
+        payload["hardnav_growth"] = self.hardnav_growth
+        payload["liability_increase"] = self.liability_increase
+        payload["net_eligible_asset_growth"] = self.net_eligible_asset_growth
+        payload["credited_growth"] = self.credited_growth
+        return payload
+
+
+@dataclass(frozen=True)
 class FinancialCommitmentArtifact:
     close_id: str
     snapshot_hash: str
