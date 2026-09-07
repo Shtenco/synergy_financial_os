@@ -1,5 +1,6 @@
 from .contracts import (
     BudgetAccountingRecognition,
+    EligibleAssetGrowthAttestation,
     FinancialCommitmentArtifact,
     FinancialContractError,
     ProjectUnderwritingDecision,
@@ -8,6 +9,7 @@ from .contracts import (
 
 __all__ = [
     "BudgetAccountingRecognition",
+    "EligibleAssetGrowthAttestation",
     "FinancialCommitmentArtifact",
     "FinancialContractError",
     "ProjectUnderwritingDecision",
