@@ -43,3 +43,24 @@ def consume_scenario_evidence(payload: dict[str, Any]) -> dict[str, Any]:
         "settlement_authority": False,
         "capital_authorization": False,
     }
+
+
+def consume_monetary_simulation(payload: dict[str, Any]) -> dict[str, Any]:
+    if payload.get("simulation_only") is not True:
+        raise ValueError("monetary input must be explicitly simulation-only")
+    if bool(payload.get("external_profit_realized")):
+        raise ValueError("simulation cannot self-declare realized external profit")
+    if bool(payload.get("accounting_authority")) or bool(payload.get("capital_authorization")):
+        raise ValueError("simulation cannot promote accounting/capital authority")
+    modeled=float(payload.get("modeled_consolidated_hardnav_usd",-1))
+    if modeled < 0:
+        raise ValueError("invalid modeled HardNAV")
+    return {
+        "kind":"MONETARY_SIMULATION",
+        "run_id":str(payload["run_id"]),
+        "packets":int(payload["packets"]),
+        "modeled_consolidated_hardnav_usd":modeled,
+        "realized_external_pnl":False,
+        "canonical_accounting":False,
+        "capital_authorization":False,
+    }
