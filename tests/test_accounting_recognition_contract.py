@@ -25,6 +25,11 @@ def test_balanced_recognition_is_accepted():
         accounting_period="2026-09-28",
         hardnav_delta="0",
         policy_refs=["fos:v1"],
+        settlement_payload={
+            "status":"SETTLED",
+            "reconciled":True,
+            "reconciliation_breaks":[],
+        },
     )
     assert payload["classification"]=="ASSET_TRANSFER"
 
@@ -39,4 +44,22 @@ def test_unbalanced_recognition_fails_closed():
             recognized_at=datetime.now(timezone.utc),
             accounting_period="2026-09",
             hardnav_delta="1",
+        )
+
+
+def test_unreconciled_settlement_cannot_be_recognized():
+    with pytest.raises(ValueError):
+        mod.accounting_recognition_payload(
+            source_settlement_event_id="66666666-6666-4666-8666-666666666666",
+            recognition_id="77777777-7777-4777-8777-777777777777",
+            classification="TRADING_PNL",
+            entries=[],
+            recognized_at=datetime.now(timezone.utc),
+            accounting_period="2026-09",
+            hardnav_delta="1",
+            settlement_payload={
+                "status":"SETTLED",
+                "reconciled":False,
+                "reconciliation_breaks":["missing_external:fill-1"],
+            },
         )
