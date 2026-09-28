@@ -1608,3 +1608,45 @@ flowchart LR
 Любое сильное утверждение должно указывать на воспроизводимый тест, benchmark, ledger/evidence artifact или формально проверяемый контракт.
 
 <!-- SYNERGY-FEDERATION-PASSPORT:END -->
+
+
+---
+
+# 🧾 Фактическое состояние `main` на 28.09.2026
+
+На текущем `main` реально присутствуют только:
+
+```text
+README.md
+docs/LEGACY_DISTILLATION_V2_OWNER.md
+docs/LEGACY_DISTILLATION_V3_IMPORT_QUEUE.md
+docs/legacy_distillation_v2/IMPORT_QUEUE.md
+tests/test_legacy_falsification_v1.py
+```
+
+Это важно: большой terminal Economic OS lineage, описанный выше, **не следует считать уже слитым в `main` только на основании README**. Канонический статус реализации должен следовать за фактическим merge/evidence, а не за архитектурным описанием.
+
+```mermaid
+flowchart LR
+    BRANCH[🌿 Historical / feature lineage] --> REVIEW[🔎 Review + evidence]
+    REVIEW --> TEST[🧪 Reproducible tests]
+    TEST --> MERGE{Merge to main?}
+    MERGE -->|yes| MAIN[✅ main implementation]
+    MERGE -->|no| LINEAGE[🕰️ preserved lineage]
+```
+
+## Текущий подтверждённый executable anchor
+
+`tests/test_legacy_falsification_v1.py` — единственный тестовый файл, непосредственно присутствующий на `main` на этом срезе. Поэтому статус `main` корректнее трактовать как **documentation + distillation + falsification bootstrap**, а не как полностью материализованный Financial OS runtime.
+
+## Promotion gate
+
+Для перевода подсистемы из описанного lineage в канонический `main` нужны одновременно:
+
+1. исходный код в `main`;
+2. воспроизводимые tests;
+3. schema/contracts;
+4. evidence bundle;
+5. отсутствие authority conflicts;
+6. подтверждение accounting invariants;
+7. merge provenance.
