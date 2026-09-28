@@ -8,10 +8,20 @@ from uuid import UUID
 
 CONTRACT_ID = "synergy.accounting.recognition/v1"
 AUTHORITY = "canonical_accounting"
+UPSTREAM_CONTRACT_ID = "synergy.settlement.evidence/v1"
 CLASSIFICATIONS = {
     "REVENUE","EXPENSE","ASSET_TRANSFER","LIABILITY_CHANGE",
     "TRADING_PNL","CAPITAL_FLOW","NON_RECOGNIZED",
 }
+
+
+def require_reconciled_settlement(settlement_payload: dict) -> None:
+    if str(settlement_payload.get("status", "")).upper() != "SETTLED":
+        raise ValueError("only SETTLED events are eligible for recognition")
+    if not bool(settlement_payload.get("reconciled")):
+        raise ValueError("settlement must be reconciled before recognition")
+    if settlement_payload.get("reconciliation_breaks"):
+        raise ValueError("reconciliation breaks must be resolved before recognition")
 
 
 def _check_double_entry(entries: list[dict]) -> None:
@@ -45,7 +55,10 @@ def accounting_recognition_payload(
     liquidnav_delta: Decimal | str = "0",
     economicnav_delta: Decimal | str = "0",
     policy_refs: Iterable[str] = (),
+    settlement_payload: dict | None = None,
 ) -> dict:
+    if settlement_payload is not None:
+        require_reconciled_settlement(settlement_payload)
     cls = classification.upper()
     if cls not in CLASSIFICATIONS:
         raise ValueError("unknown accounting classification")
