@@ -117,7 +117,7 @@ CAPITAL != RESERVE != MONEY != CREDIT
 - **SYNR** — резервный / сберегательный / страховой капитал;
 - **SYNT** — абстрактный интерфейс transaction money;
 - **USDS** — USD-linked monetary/credit research family;
-- **Credit** — временное отношение `asset ↔ liability` со сроком, expected loss и источником фондирования.
+- **Credit** — временное отношение `asset  liability` со сроком, expected loss и источником фондирования.
 
 Один и тот же токен не должен без явной модели одновременно быть:
 
@@ -1578,17 +1578,17 @@ NO DISTRIBUTION / RELEASE CLAIM
 <!-- SYNERGY-FEDERATION-PASSPORT:START -->
 ---
 
-## 🧭 SYNERGY federation passport
+##  SYNERGY federation passport
 
-**Домен:** 💰 Canonical financial authority  
+**Домен:**  Canonical financial authority  
 **Архитектурный родитель:** [`synergy_system`](https://github.com/Shtenco/synergy_system)  
 **Архитектурный корень:** [`synergy_system`](https://github.com/Shtenco/synergy_system)
 
 ```mermaid
 flowchart LR
-    SYS[🧭 synergy_system] --> P[synergy_system]
+    SYS[ synergy_system] --> P[synergy_system]
     P --> THIS[synergy_financial_os]
-    THIS --> E[📦 Evidence / outputs]
+    THIS --> E[ Evidence / outputs]
 ```
 
 Архитектурная принадлежность не заменяет доказанную интеграцию. Runtime-связь должна подтверждаться контрактами, manifests, deployment-конфигурацией или тестами.
@@ -1599,9 +1599,9 @@ flowchart LR
 
 ### Навигация
 
-- [📚 Атлас 75 репозиториев](https://github.com/Shtenco/synergy_system/blob/main/docs/SYNERGY_REPOSITORY_ATLAS.md)
-- [🧾 Registry](https://github.com/Shtenco/synergy_system/blob/main/registry/SYNERGY_REPOSITORIES.json)
-- [🧭 Architecture root](https://github.com/Shtenco/synergy_system)
+- [ Атлас 75 репозиториев](https://github.com/Shtenco/synergy_system/blob/main/docs/SYNERGY_REPOSITORY_ATLAS.md)
+- [ Registry](https://github.com/Shtenco/synergy_system/blob/main/registry/SYNERGY_REPOSITORIES.json)
+- [ Architecture root](https://github.com/Shtenco/synergy_system)
 
 ### Evidence rule
 
@@ -1612,7 +1612,7 @@ flowchart LR
 
 ---
 
-# 🧾 Фактическое состояние `main` на 28.09.2026
+#  Фактическое состояние `main` на 28.09.2026
 
 На текущем `main` реально присутствуют только:
 
@@ -1628,11 +1628,11 @@ tests/test_legacy_falsification_v1.py
 
 ```mermaid
 flowchart LR
-    BRANCH[🌿 Historical / feature lineage] --> REVIEW[🔎 Review + evidence]
-    REVIEW --> TEST[🧪 Reproducible tests]
+    BRANCH[ Historical / feature lineage] --> REVIEW[ Review + evidence]
+    REVIEW --> TEST[ Reproducible tests]
     TEST --> MERGE{Merge to main?}
-    MERGE -->|yes| MAIN[✅ main implementation]
-    MERGE -->|no| LINEAGE[🕰️ preserved lineage]
+    MERGE -->|yes| MAIN[ main implementation]
+    MERGE -->|no| LINEAGE[ preserved lineage]
 ```
 
 ## Текущий подтверждённый executable anchor
