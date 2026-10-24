@@ -1,3 +1,10 @@
+<!-- SCIENTIFIC-PROFILE-2026:START -->
+<img src="assets/readme/research-architecture.svg" width="100%" alt="SYNERGY FINANCIAL OS / ACCOUNTING AUTHORITY"/>
+
+[Научный профиль и инженерная архитектура](docs/SCIENTIFIC_PROFILE_2026.md) — отдельное исследовательское дополнение; весь предыдущий README сохранён без сокращений.
+
+<!-- SCIENTIFIC-PROFILE-2026:END -->
+
 # SYNERGY Financial OS
 
 > **Канонический финансово-бухгалтерский слой экосистемы SYNERGY: HardNAV, double-entry accounting, ликвидность, обязательства, распределение капитала, признание внешней прибыли, продуктивное финансирование и доказательная денежная политика.**
